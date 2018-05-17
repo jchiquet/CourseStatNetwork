@@ -1,0 +1,129 @@
+---
+title: "Tutorial: Inference in the Stochastic Block Model"
+author: "MSc in Statistics for Smart Data -- Introduction to graph analysis and modeling"
+date: "Julien Chiquet, November the 7, 2017"
+fontsize: 11pt
+lang: en
+geometry: left=1.45in,top=1.35in,right=1.45in,bottom=1.35in
+classoption: a4paper
+linkcolor: red
+urlcolor: blue
+citecolor: green
+output:
+  pdf_document:
+    number_sections: true
+    citation_package: natbib
+    includes:
+      in_header: ../preamble.sty
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Preliminaries {-}
+
+\textsf{Goals.}
+
+1. Random graphs generation and corresponding Gaussian data: Erdös-Rényi, Community networks, star-network, scale-free
+2. sparse inference methods for Gaussian Graphical models
+3. Analysis of some real world data
+
+\textsf{Instructions.} Each student _must_ send an `R markdown` report generated via `R studio` to <julien.chiquet@inra.fr> at the end of the tutorial. This report should answer the questions by commentaries and codes generating appropriate graphical outputs. [A cheat sheet of the  markdown syntax can be found here.](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
+
+\textsf{Required packages.} Check that the following packages are correctly available on your plateform:
+```{r, message=FALSE}
+library(huge)
+library(glmnet)
+library(sand)
+```
+
+You also need `Rstudio`, \LaTeX\ and packages for markdown: 
+
+```{r, message=FALSE}
+library(knitr)
+library(rmarkdown)
+```
+
+# Background
+
+## Notations
+
+We let  $\mathcal{P} =  \{1,\dots,p\}$ be  a set  of nodes. Presence  or absence  of an  edge  between two  nodes $i$  and $j$  is described by the random variable $X_{ij} = \mathbf{1}_{\{i \leftrightarrow j\}}$.
+We  assume  by  convention  that   the  nodes  are  not  connected  to
+themselves,  that is,  $X_{ii}=0$ for  all $i\in\mathcal{P}$.  
+
+## Stochastic Block Model
+
+This model  has several  representation. We  adopt the  one given by Daudin, Picard and Robin (2007), known as ``mixture model for random  graphs''. This  model spreads  the nodes  among a  set of  $Q$ classes $\mathcal{Q}=\{1,\dots,Q\}$ with  \emph{a priori} distribution ${\boldsymbol \alpha} = (\alpha_1,\dots,\alpha_Q)$.  The hidden random indicator   variables  $(Z_{iq})_{i\in\mathcal{P},   q\in\mathcal{Q}}$ define the classes each node belongs to. Thus
+\begin{equation}
+  \label{eq:prior_classes}
+  \alpha_q  = \mathbb{P}(Z_{iq}  =  1) =  \mathbb{P}(i  \in q),  \quad
+  \text{ such that} \sum_{q} \alpha_q = 1.
+\end{equation}
+
+It is straightforward to see that $\mathbf{Z}_i =  (Z_{i1}, \dots, Z_{iQ})$ has a multinomial distribution
+\begin{equation}
+  \label{eq:Zmulti}
+  \mathbf{Z}_i \sim \mathcal{M}(1,\boldsymbol\alpha).
+\end{equation}
+
+Finally, let  $\pi_{q\ell}$ be the  probability that a node  in class $q$ connects to a node  in class $\ell$\footnote{Since the network is undirected,  the  matrix  $\mathbf{X}$  is  symmetric  and  so $\pi_{q\ell}  = \pi_{\ell  q}$.}. The  probability for  having edge between  nodes $i$  and $j$  is defined  \emph{conditionally on}  the classes they belong to:
+\begin{equation}
+  \label{eq:mixnet}
+  X_{ij} |  \{i\in q, j\in\ell\}  \sim \mathcal{B}(\pi_{q\ell}), \quad i\neq j.
+\end{equation}
+
+To sum up, the parameters are
+
+  - $\mathbf{X}=(X_{ij})$,  the  $p\times  p$  adjacency matrix of the graph,
+  - ${\boldsymbol\pi} = (\pi_{q\ell})$ the $Q\times Q$ connectivity matrix, 
+  - ${\boldsymbol \alpha} = (\alpha_q)$, the size-$Q$ vector of class proportions.
+
+### Useful quantities in the variational EM
+
+During this practical, you will implement the variational EM (VEM) algorithm studied during this morning lecture. Here are the expressions of the key quantities that you need to compute along the algorithm.
+
+#### Variational lower bound.
+
+The variational lower bound of the loglikelihood maximized by the VEM is
+\begin{equation*}
+  J(\boldsymbol\tau,\boldsymbol\pi,\boldsymbol\alpha) = \sum_{i,q} \tau_{iq} \log \alpha_q + \sum_{i<j,q,\ell}  \tau_{iq}  \tau_{j\ell} \log b(X_{ij} ; \pi_{q\ell}) - \sum_{i,q} \tau_{iq} \log(\tau_{iq}),
+\end{equation*}
+where $b(x;\pi) = \pi^x (1-\pi)^{1-x}$ is the probability density function of the Bernoulli distribution and $\tau_{iq}$ are the posterior probabilities for class belonging, aka the variational parameters.
+
+#### M step.
+
+For  fixed  values of  $\hat\tau_{iq}$ the  estimators    for   $\alpha_q$   and
+$\pi_{q\ell}$ by  maximizing the  conditional expectation are 
+\begin{equation}
+\hat{\alpha}_q = \frac{1}{n}\sum_i \hat{\tau}_{iq} , \quad \hat\pi_{q\ell} = \frac{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell} X_{ij}}{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell}}. 
+\end{equation}
+
+#### E step.
+
+The variational parameters $\tau_{iq}$ verify the following fixed point relation:
+\begin{equation}
+\hat{\tau}_{iq} \varpropto \alpha_q \prod_{j} \prod_{\ell} b(X_{ij}, \pi_{q\ell})^{\hat{\tau}_{j\ell}}
+\end{equation}
+
+#### Integrated complete likelihood criterion (ICL).
+
+The variational ICL used to compare models with different numbers of clusters is
+\begin{multline*}
+  \mathrm{vICL}(Q) = \sum_{i,q} \hat{Z}_{iq} \log \hat{\alpha}_q + \sum_{i<j,q,\ell}  \hat{Z}_{iq}  \hat{Z}_{j\ell} b(X_{ij} ; \hat{\pi}_{q\ell}) 
+  \\ - \frac{1}{2} \left(\frac{Q(Q+1)}{2} \log \frac{n(n-1)}{2} + (Q-1) \log (n) \right)
+\end{multline*}    
+where $\hat{Z}_{iq}$ is the maximum a posteriori associated to the estimated probability $\hat{\tau}_{iq}$.
+
+# Introduction
+
+This practical aims to provide a quick overview of sparse Gaussian Graphical Models (GGM) and their use in the context of network reconstruction for gene interaction networks.
+
+To this end, we rely on the `R`-package **huge**, which implements some of the most popular sparse GGM methods and provides a set of basic tools for their handling and their analysis.
+
+The first part focuses on an empirical analysis of the statistical models used for network reconstruction. The objective is to quickly study the range of applicability of these methods. It should also give you some insights about their limitations, especially toward the interpretability of the inferred network in terms of biology.
+
+The second part applies these methods to one data sets: the first one consists in a transcriptomic data associated to a small regulatory network for which partial ground truth is available. The objective is to unravel the most striking interactions between differentially expressed genes.
+
