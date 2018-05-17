@@ -1,5 +1,9 @@
 # Course for Network and Graph Analysis
 
-Some material for course about statistical analysis of network and random graph models.
+Some material for a course about statistical analysis of networks and inference of some random graph models.
 
-More details some day.
+For now, there are two chapters
+
+- Descriptive Analysis of Network and Igraph Basics
+- Inference in the Stochastic Bloc Model
+
