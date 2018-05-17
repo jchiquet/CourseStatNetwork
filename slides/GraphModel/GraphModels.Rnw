@@ -1,0 +1,1100 @@
+\documentclass{beamer}
+
+\def\currentCourse{An introduction to graph analysis and modeling}
+\def\currentInstitute{MSc in Statistics for Smart Data -- ENSAI}
+\def\currentLogo{logo_ensai}
+\def\currentDate{Automn semester, 2017}
+\def\currentChapter{The Stochastic block model}
+
+<<preamble, child='~/texmf/tex/latex/beamer_sheets/common_preamble.Rnw'>>=
+@
+
+<<load_packages, echo=FALSE>>=
+library(igraph)
+library(sand)
+@
+
+\usetikzlibrary{calc,shapes,backgrounds,arrows,automata,shadows,positioning}
+
+\begin{document}
+
+\dotitlepage
+
+\begin{frame}
+  \frametitle{Motivations}
+
+  \begin{block}{Last time: \alert{find an underlying organization in a observed network}}
+    Spectral or hierachical clustering for network data \\
+    \begin{itemize}
+      \item[$\rightsquigarrow$] \alert{Not model-based}, thus no statistical inference possible
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{Today: \alert{clustering of network based on a probabilistic model of the graph}}<2->
+    Become familiar with
+    \begin{itemize}
+      \item the stochastic block model, a random graph model tailored for clustering vertices,
+      \item the variational EM algorithm used to infer SBM from network data.
+    \end{itemize}
+  \end{block}
+
+  \onslide<3>{
+  \begin{center}
+    hierarchical clustering $\leftrightarrow$ \alert{Gaussian mixture models} \\
+      $\Updownarrow$ \\
+    hierarchical/spectral clustering for network $\leftrightarrow$ Stochastic block model
+  \end{center}
+  }
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents
+\end{frame}
+
+%% ==========================================================================
+\section{Background: mixture models and EM}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{References}
+
+    \begin{thebibliography}{99}
+      \setbeamertemplate{bibliography item}[book]
+
+    \bibitem[EK2]{EK2} Pattern recognition and machine learning,
+    \newblock \textcolor{black}{Christopher Bishop}
+    \newblock \alert{Chapter 9: Mixture Models and EM}
+    \newblock {\tiny\url{http://users.isr.ist.utl.pt/~wurmd/Livros/school/}}
+
+      \setbeamertemplate{bibliography item}[article]
+
+    \bibitem[CM1]{CM1} Classification non-supervisées,
+    \newblock \textcolor{black}{É. Lebarbier, T. Mary-Huard}
+    \newblock \alert{Chapitre 3 - méthode probabiliste: le modèle de mélange}
+    \newblock {\tiny\url{https://www.agroparistech.fr/IMG/pdf/ClassificationNonSupervisee-AgroParisTech.pdf}}
+
+    \end{thebibliography}
+
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Mixture models}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{Latent variables models}
+
+  \begin{definition}
+    A \alert{latent variable model} is a statistical model that relates, for $i=1,\dots,n$ individuals,
+  \begin{itemize}
+    \item a set of \alert{manifest} (observed) variables $\bX = (X_i, i=1,\dots,n)$ to
+    \item a set of \alert{latent} (unobserved) variables $\bZ = (Z_i, i=1,\dots,n)$.
+    \end{itemize}
+  \end{definition}
+
+  \begin{block}{Common assumption: conditional independence}
+    \vspace{-.5cm}
+    \begin{equation*}
+      \prob((X_1, \dots, X_n)|(Z_1,\dots, Z_n))  = \prod_{i=1}^n \prob(X_i| Z_i).
+    \end{equation*}
+  \end{block}
+
+  \vspace{-.25cm}
+
+  \begin{block}{Famous examples}<2->
+    \vspace{-.25cm}
+    \begin{itemize}
+      \item $(Z_i, i\geq 1)$ is Markov chain: \alert{Markov models}
+      \item $Z_i$ categorical and independent: \alert{mixture models}
+      \item<3> \alert{what if $X_i = X_{i'j'}$ is a collection of edges in a graph?}
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mixture models: the latent variables}
+
+    When $(Z_1,\dots,Z_n)$ are independent categorical variables, they give a \alert{natural (latent) classification of the observations} $(X_1,\dots,X_n)$ -- or \alert{labels}.
+
+  \begin{block}{Notations}<2->
+    Let $(Z_1, \dots, Z_n)$ be \textit{iid} categorical variables with distribution
+    \vspace{-.25cm}
+    \begin{equation*}
+      \prob(i \in q) = \prob(Z_i = q) = \alpha_q, \quad \text{s.t.}  \sum_{q=1}^Q \alpha_q = 1.
+    \end{equation*}
+  \end{block}
+
+  \vspace{-.5cm}
+  \begin{block}{Alternative (equivalent) notation}<3>
+    Let $Z_i=(Z_{i1},\dots, Z_{iq})$ be an indicator vector of label for $i$:
+    \vspace{-.25cm}
+    \begin{equation*}
+      \prob(i \in q) = \prob(Z_{iq}  =  1)=\alpha_q,  \quad  \text{s.t.} \sum_{q=1}^Q \alpha_q = 1.
+    \end{equation*}
+    By definition, $Z_i \sim \mathcal{M}(1, \balpha)$, with $\balpha = (\alpha_1, \dots, \alpha_Q)$.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mixture models: the manifest variables}
+
+  A mixture model represents the \alert{presence of subpopulations} within an overall population as follows:
+  \begin{equation*}
+    \prob(X_i) = \sum_{z_i \in \mathcal{Z}_i} \prob(X_i , Z_i) = \sum_{Z_i \in \mathcal{Z}_i}\prob(X_i | Z_i) \prob(Z_i).
+  \end{equation*}
+
+  \vfill
+
+  \begin{block}{Conditional distribution of the manifest variables}
+    We assume a \alert{parametric distribution} of $X$ in each subpopulation
+    \begin{equation*}
+      X_i | \set{Z_i = q} \sim \prob_{\theta_q} \qquad \bigg(\Leftrightarrow X_i | \set{Z_{iq}} = 1 \sim \prob_{\theta_q}\bigg)
+    \end{equation*}
+    The specificity of each class is handled by $\set{\btheta_q}_{q=1}^Q$.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mixture models: likelihoods}
+
+  \begin{block}{The complete-data likelihood}
+    It is the join distribution of $(X_i,Z_i)$:
+    \begin{equation*}
+      \prob(X_i,Z_i) = \alpha_{Z_i} \prob_{\btheta_q}(X_{Z_i})
+    \end{equation*}
+  \end{block}
+
+  \vspace{-.25cm}
+
+  \begin{block}{The incomplete-data likelihood}<2>
+    It is the marginal distribution of $X_i$ once $Z_i$ integrated:
+    \begin{equation*}
+      \prob(X_i) = \sum_{q=1}^Q \prob(X_i, Z_i = q)  = \sum_{q=1}^Q \alpha_q \prob_{\btheta_q}(X_i)
+    \end{equation*}
+  \end{block}
+
+  \vspace{-.25cm}
+
+  \onslide<2>{
+    $\rightsquigarrow$ A \alert{mixture model} is a sum of distributions weigthed by the proportion of each subpopulation.
+  }
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Expectation-Maximization algorithm}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{Intractability of the Likelihood}
+
+  \begin{block}{Maximum Likelihood Estimator}
+    The MLE aims to maximize the (marginal) likehood of the observations:
+    \begin{equation*}
+      L(\btheta; \bX) = \prob_{\btheta}((X_1,\dots,X_n)) = \int_{\bZ \in \mathcal{Z}} \prob_{\btheta}(\bX,\bZ) \mathrm{d} \bZ
+    \end{equation*}
+    Integrations are summation over $\set{1,\dots,Q}$: we have $Q^n$ terms !
+  \end{block}
+
+  \vfill
+
+  \begin{block}{Intractable summation}<2->
+    With mixture models, for $\btheta = (\btheta_1,\dots,\btheta_Q)$ we have
+    \begin{equation*}
+      \log L(\btheta; \bX) = \sum_{i=1}^n \log \set{\sum_{q=1}^Q \alpha_q \prob_{\btheta_q}(X_i)}.
+    \end{equation*}
+    \alert{$\rightsquigarrow$ Direct maximization of the likelihood is impossible in practice}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bayes decision rule / Maximum \textit{a posteriori}}
+
+  \begin{block}{Principle}
+    Affect an individual $i$ to the subpopulation which is the most likely according to the data:
+    \begin{equation*}
+      \tau_{iq} = \prob(Z_{iq}=1 | X_i = x_i)
+    \end{equation*}
+    This is the \alert{posterior probability} for $i\in q$.
+  \end{block}
+
+  \vfill
+
+  \begin{block}{Application of the Bayes Theorem}
+    It is straightforward to show that
+    \begin{equation*}
+      \tau_{iq} = \frac{\alpha_q \prob_{\theta_q}(x_i)}{\sum_{q=1}^Q \alpha_q \prob_{\theta_q}(x_i)}
+    \end{equation*}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Principle of the EM algorithm}
+
+  \begin{block}{If $\btheta$ were known}
+    \dots estimating the \alert{posterior probability $\prob(Z_i|\bX)$} of $\bZ$ should be easy\\
+    \textit{By means of the Bayes decision rule}
+  \end{block}
+
+  \vfill
+
+  \begin{block}{If $\bZ$ were known\dots}
+    \dots estimating the \alert{best set of parameter} $\btheta$ should be easy\\
+    \textit{This is close to usual maximum likelihood estimation}
+  \end{block}
+
+  \vfill
+
+  \begin{block}{EM principle}<2>
+    Maximize the marginal likelihood iteratively:
+    \begin{enumerate}
+      \item Initialize $\btheta$
+      \item Compute the probability of $\bZ$ given $\btheta$
+      \item Get a better $\btheta$ with the new $\bZ$
+      \item Iterate until convergence
+    \end{enumerate}
+  \end{block}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Formal algorithm}
+
+  \begin{block}{Initialization: \textcolor{black}{start from a good guess either of $\bZ$ or $\btheta$, then iterate 1-2}}
+  \end{block}
+
+  \begin{block}{1. Expectation step}
+    Calculate the expected value of the loglikelihood under the current $\btheta$
+    \begin{equation*}
+      Q\left(\btheta|\btheta^{(t)}\right) = \E_{\bZ|\bX;\btheta^{(t)}}\big[ \log L (\btheta;\bX,\bZ)  \big] \qquad (\textit {needs } \prob_{\btheta^{(t)}}(\bZ|\bX))
+    \end{equation*}
+  \end{block}
+
+  \vfill
+
+  \begin{block}{2. Maximization step}
+    Find the parameters that maximize this quantity
+    \begin{equation*}
+      \btheta^{(t+1)} = \argmax_{\btheta} Q\left(\btheta|\btheta^{(t)}\right)
+    \end{equation*}
+  \end{block}
+
+  Stop when $\|\btheta^{(t+1)} - \btheta^{(t)}\| < \varepsilon$ or $\|Q^{(t+1)} - Q^{(t)}\| < \varepsilon$
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{(Basic) Convergence analysis}
+
+  \begin{theorem}
+    At each step of the EM algorithm, the loglikelihood increases. EM thus reaches a local optimum.
+  \end{theorem}
+
+  \begin{proof}
+    On board.
+  \end{proof}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Choosing the number of component}
+
+  \begin{block}{Reminder: Bayesian Information Criterion}
+    The BIC is a model selection criterion which penalizes the adjustement to the data by the number of parameter in model $\mathcal{M}$ as follows:
+    \begin{equation*}
+      \mathrm{BIC}(\mathcal{M}) = \log L(\hatbtheta; \bX) - \frac{1}{2}\log(n) \mathrm{df}(\mathcal{M}).
+    \end{equation*}
+  \end{block}
+
+  \vspace{-.35cm}
+
+  \begin{block}{Integrated Classification Criterion}<2->
+    It is an adaptation working with the complete-data likelihood:
+    \vspace{-.25cm}
+    \begin{align*}
+      \mathrm{ICL}(\mathcal{M}) & = \log L(\hatbtheta; \bX, \hat{\bZ}) + \frac{1}{2}\log(n) \mathrm{df}(\mathcal{M}) \\
+      & = \mathrm{BIC} - \mathcal{H}(\prob(\hat \bZ | \bX),
+    \end{align*}
+    where the entropy $\mathcal{H}$ measures the separability of the subpopulations.
+  \end{block}
+
+  \vfill
+
+  \onslide<3>{$\rightsquigarrow$ \alert{We choose $\mathcal{M}(Q)$ that maximizes either BIC or ICL}}
+\end{frame}
+
+%% ==========================================================================
+\subsection{Example: mixture of Gaussians}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{Mixture of Gaussians}
+  \framesubtitle{Calculs in the univariate case: complete likelihood}
+
+  The distribution of $X_i$ conditional on the label of $i$ is assumed to be a univariate Gaussian distribution with unknown parameters:
+  \begin{equation*}
+  X_i | Z_{iq} = 1 \sim \mathcal{N}(\mu_q,\sigma^2_q)
+  \end{equation*}
+
+  \begin{block}{complete Likelihood $(\bX,\bZ)$}
+  The model complete loglikelihood is
+    \begin{multline*}
+        \log L(\boldsymbol{\mu},\boldsymbol{\sigma}^2; \bX, \bZ)  = \\ \sum_{i=1}^n \sum_{q=1}^Q Z_{iq} \left(\log \alpha_q - \log\sigma_q -\log(\sqrt{2\pi}) - \frac{1}{2\sigma_q^2} (x_i - \mu_q)^2 \right)
+   \end{multline*}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mixture of Gaussians}
+  \framesubtitle{Calculs in the univariate case: E-step}
+
+  \begin{block}{E-step}
+    For fixed values of  $\mu_q, \sigma_q^2$ and  $\alpha_q$, the  estimates of  the
+  posterior probabilities $\hat\tau_{iq}= \P(Z_{iq}=1|X_i)$ are
+    \begin{equation*}
+        \hat\tau_{iq} = \frac{\alpha_q \mathcal{N}(x_i; {\mu}_q, \sigma_q^2)}{\sum_{q=1}^Q \alpha_q \mathcal{N}(x_i; {\mu}_q, \sigma_q^2)},
+   \end{equation*}
+   where $\mathcal{N}$ is the density of the normal distribution.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mixture of Gaussians}
+  \framesubtitle{Calculs in the univariate case: M-step}
+
+  \begin{block}{M-step}
+    For fixed values of  $\tau_{iq}$, the  estimates of  the model parameters are
+    \begin{equation*}
+    \hat\alpha_q = \frac{\sum_{i=1}^n \tau_{iq}}{\sum_{i=1}^n\sum_{q=1}^Q \tau_{iq}} \quad \hat\mu_q = \frac{\sum_i \tau_{iq} x_i}{\sum_i \tau_{iq}} \quad \hat\sigma^2_q = \frac{\sum_{i=1}^n \tau_{iq} (x_i-\mu_q)^2}{\sum_{i=1}^n \tau_{iq}}
+   \end{equation*}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{R code: auxiliary functions}
+
+We start by defining functions to compute the complete model loglikelihood, perform the E step and the M step.
+<<EM_mixture_auxiliaries, tidy=FALSE>>=
+get.cloglik <- function(X, Z, theta) {
+  alpha <- theta$alpha; mu <- theta$mu; sigma <- theta$sigma
+  xs <- scale(matrix(X,length(x),length(alpha)),mu,sigma)
+  return(sum(Z*(log(alpha)-log(sigma)-.5*(log(2*pi)+xs^2))))
+}
+
+M.step <- function(X, tau) {
+  n <- length(X); Q <- ncol(tau)
+  alpha  <- colMeans(tau)
+  mu     <- colMeans(tau * matrix(X,n,Q)) / alpha
+  sigma  <- sqrt(colMeans(tau*sweep(matrix(X,n,Q),2,mu,"-")^2)/alpha)
+  return(list(alpha=alpha, mu=mu, sigma=sigma))
+}
+
+E.step <- function(X, theta) {
+  tau <- mapply(function(alpha, mu, sigma) {
+      alpha*dnorm(X,mu,sigma)
+    }, theta$alpha, theta$mu, theta$sigma)
+  return(tau / rowSums(tau))
+}
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{R code: EM for univariate mixture}
+
+<<EM_mixture, echo=TRUE, tidy=FALSE>>=
+EM.mixture <- function(X, Q,
+                       init.cl=sample(1:Q,n,rep=TRUE), max.iter=100, eps=1e-5) {
+    n <- length(X); tau <- matrix(0,n,Q); tau[cbind(1:n,init.cl)] <- 1
+    Eloglik <- vector("numeric", max.iter)
+    iter <- 0; cond <- FALSE
+
+    while (!cond) {
+        iter <- iter + 1
+        ## M step
+        theta <- M.step(X, tau)
+        ## E step
+        tau <- E.step(X, theta)
+        ## check consistency
+        Eloglik[iter] <- get.cloglik(X, tau, theta)
+        if (iter > 1)
+            cond <- (iter>=max.iter) | Eloglik[iter]-Eloglik[iter-1] < eps
+    }
+
+    return(list(alpha = theta$alpha,  mu = theta$mu,  sigma = theta$sigma,
+                tau   = tau, cl = apply(tau, 1, which.max),
+                Eloglik = Eloglik[1:iter]))
+}
+@
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Example: data generation}
+
+We first generate data with 4 components:
+<<EM_mixture_example_data>>=
+mu1 <- 5   ; sigma1 <- 1; n1 <- 100
+mu2 <- 10  ; sigma2 <- 1; n2 <- 200
+mu3 <- 15  ; sigma3 <- 2; n3 <- 50
+mu4 <- 20  ; sigma4 <- 3; n4 <- 100
+cl <- rep(1:4,c(n1,n2,n3,n4))
+x <- c(rnorm(n1,mu1,sigma1),rnorm(n2,mu2,sigma2),
+       rnorm(n3,mu3,sigma3),rnorm(n4,mu4,sigma4))
+n <- length(x)
+
+## we randomize the class ordering
+rnd <- sample(1:n)
+cl <- cl[rnd]
+x  <- x[rnd]
+
+alpha <- c(n1,n2,n3,n4)/n
+@
+\end{frame}
+
+\begin{frame}[fragile, allowframebreaks]
+  \frametitle{Example: data generation - plot}
+
+Let us plot the data and the theoretical mixture.
+<<EM_mixture_example_data_plot>>=
+curve(alpha[1]*dnorm(x,mu1,sigma1) +
+      alpha[2]*dnorm(x,mu2,sigma2) +
+      alpha[3]*dnorm(x,mu3,sigma3) +
+      alpha[4]*dnorm(x,mu4,sigma3),
+      col="blue", lty=1, from=0,to=30, n=1000,
+      main="Theoretical Gaussian mixture and its components",
+      xlab="x", ylab="density")
+curve(alpha[1]*dnorm(x,mu1,sigma1), col="red", add=TRUE, lty=2)
+curve(alpha[2]*dnorm(x,mu2,sigma2), col="red", add=TRUE, lty=2)
+curve(alpha[3]*dnorm(x,mu3,sigma3), col="red", add=TRUE, lty=2)
+curve(alpha[4]*dnorm(x,mu4,sigma4), col="red", add=TRUE, lty=2)
+rug(x)
+@
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Example: adjustment}
+
+<<EM_mixture_run>>=
+out <- EM.mixture(x, Q=4, init.cl=sample(1:4,n,rep=TRUE))
+plot(out$Eloglik, main="EM criterion", type="l", xlab="iteration")
+@
+\end{frame}
+
+\begin{frame}[fragile, allowframebreaks]
+  \frametitle{Example: adjustment - plot}
+
+<<EM_mixture_run_plot>>=
+out <- EM.mixture(x, Q=4, init.cl=kmeans(x,4)$cl)
+curve(alpha[1]*dnorm(x,mu1,sigma1) +
+      alpha[2]*dnorm(x,mu2,sigma2) +
+      alpha[3]*dnorm(x,mu3,sigma3) +
+      alpha[4]*dnorm(x,mu4,sigma3), col="blue",
+      lty=1, from=0,to=30, n=1000,
+      main="Theoretical Gaussian mixture and estimated components",
+      xlab="x", ylab="density")
+curve(out$alpha[1]*dnorm(x,out$mu[1],out$sigma[1]), col="red", add=TRUE, lty=2)
+curve(out$alpha[2]*dnorm(x,out$mu[2],out$sigma[2]), col="red", add=TRUE, lty=2)
+curve(out$alpha[3]*dnorm(x,out$mu[3],out$sigma[3]), col="red", add=TRUE, lty=2)
+curve(out$alpha[4]*dnorm(x,out$mu[4],out$sigma[4]), col="red", add=TRUE, lty=2)
+rug(x)
+@
+
+\end{frame}
+
+\begin{frame}[fragile, allowframebreaks]
+  \frametitle{Example: adjustment - classification}
+
+<<EM_mixture_run_contingency>>=
+table(cl, out$cl)
+aricode::ARI(cl, out$cl)
+@
+
+\end{frame}
+
+%% ==========================================================================
+\section{The Stochastic Block Model (SBM)}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{References}
+
+    \begin{thebibliography}{99}
+      \setbeamertemplate{bibliography item}[book]
+
+    \bibitem[EK2]{EK2} Statistical Analysis of Network Data: Methods and Models
+    \newblock \textcolor{black}{Eric Kolazcyk}
+    \newblock \alert{Chapters 5 and 6}
+
+      \setbeamertemplate{bibliography item}[article]
+
+    \bibitem[EK2]{EK2} Mixture model for random graphs, Statistics and Computing
+    \newblock \textcolor{black}{Daudin, Robin, Picard}
+    \newblock {\tiny\url{pbil.univ-lyon1.fr/members/fpicard/franckpicard_fichiers/pdf/DPR08.pdf
+}}
+
+    \bibitem[CM1]{CM1} Analyse statistique de graphes,
+    \newblock \textcolor{black}{Catherine Matias}
+    \newblock \alert{Chapitre 4, Section 4}
+
+    \end{thebibliography}
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Some Graphs Models and their limitations}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{A mathematical model: Erdös-Rényi graph}
+
+  \begin{definition}
+    Let $\clV = {1,\dots,n}$ be a set of fixed vertices. The (simple) Erdös-Rény model $\mathcal{G}(n,\pi)$ assumes random edges between pairs of nodes with probability $\pi$. In orther word, the (random) adjacency matrix $\bX$ is such that
+    \begin{equation*}
+      X_{ij} \sim \mathcal{B}(\pi)
+    \end{equation*}
+  \end{definition}
+
+  \vfill
+
+  \begin{proposition}[degree distribution]
+    The (random) degree $D_i$ of vertex $i$ follows a binomial distribution:
+      \begin{equation*}
+        D_i \sim b(n-1, \pi).
+      \end{equation*}
+  \end{proposition}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Erdös-Rényi - example}
+
+<<ER_example>>=
+G1 <- igraph::sample_gnp(10, 0.1)
+G2 <- igraph::sample_gnp(10, 0.9)
+G3 <- igraph::sample_gnp(100, .02)
+par(mfrow=c(1,3))
+plot(G1, vertex.label=NA) ; plot(G2, vertex.label=NA)
+plot(G3, vertex.label=NA, layout=layout.circle)
+@
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Erdös-Rény - limitations: very homegeneous}
+
+<<ER_limitation1>>=
+average.path.length(G3); diameter(G3)
+@
+
+<<ER_limitation2, echo=FALSE>>=
+par(mfrow=c(1,2))
+hist(degree(G3), col="lightblue"); plot(cluster_fast_greedy(G3), G3)
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mechanism-based model: preferential attachment}
+
+  The graph is defined dynamically as follows
+  \begin{block}{Definition}
+    Start from a initial graph $\mathcal{G}_0 = (\mathcal{V}_0,\mathcal{E}_0)$, then for each time step,
+    \begin{enumerate}
+      \item At $t$ a new node $V_t$ is added
+      \item $V_t$ is connected to $i \in V_{t-1}$ with probability
+      \begin{equation*}
+        D_i^\alpha + \mathrm{cst.}
+      \end{equation*}
+    \end{enumerate}
+  \end{block}
+  $\rightsquigarrow$ Nodes with high degree get more connections thus \alert{richers get richers}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Preferential attachment - example}
+
+<<PA_example>>=
+G1 <- igraph::sample_pa(20, 1, directed=FALSE)
+G2 <- igraph::sample_pa(20, 5, directed=FALSE)
+G3 <- igraph::sample_pa(200, directed=FALSE)
+par(mfrow=c(1,3))
+plot(G1, vertex.label=NA) ; plot(G2, vertex.label=NA)
+plot(G3, vertex.label=NA, layout=layout.circle)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Preferential attachment - limitations}
+
+<<PA_limitation1>>=
+average.path.length(G3); diameter(G3)
+@
+
+<<PA_limitation2, echo=FALSE>>=
+par(mfrow=c(1,2))
+hist(degree(G3), col="lightblue"); plot(cluster_fast_greedy(G3), G3)
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Limitations}
+
+    \begin{itemize}
+    \item \alert{Erdös-Rényi}\\
+      The ER model does not fit well real world network
+      \begin{itemize}
+        \item As can been seen from its degree distribution
+        \item ER is generally too homogeneous
+      \end{itemize}
+    \item \alert{Preferential attachment}
+      \begin{itemize}
+        \item Is defined through an algorithm so performing statistics is complicated
+        \item Is stucked to the power-law distribution of degrees
+      \end{itemize}
+    \end{itemize}
+
+  \vfill
+
+  \begin{block}{The Stochastic Block Model}
+    The SBM\footnote{Other models exist (e.g. exponential model for random graphs) but less popular.} generalizes ER in a mixture framework. It provides
+    \begin{itemize}
+      \item a statistical framework to adjust and interpret the parameters
+      \item a flexible yet simple specification that fits many existing network data
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+
+%% ==========================================================================
+\subsection{Mixture of Erdös-Rényi and the SBM}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{Stochastic Block Model: definition}
+    \framesubtitle{Mixture model point of view: mixture of Erdös-Rényi}
+
+    \begin{block}{Latent structure}
+      Let $\mathcal{V} = \set{1,..,n}$ be a fixed set of vertices. We give each $i\in\mathcal{V}$ a \alert{latent label} among a set $\mathcal{Q}=\{1,\dots,Q\}$ such that
+    \begin{itemize}
+    \item $\alpha_q = \prob(i\in q), \quad \sum_q \alpha_q=1$;
+    \item $Z_{iq}=\1_{\{i \in  q\}}$  are independent  hidden variables.
+   \end{itemize}
+   \end{block}
+
+    \begin{block}{The conditional distribution of the edges}
+    Connexion probabilities depend on the node class belonging:
+    \begin{equation*}
+      X_{ij} | \set{i\in q, j\in\ell} \sim \mathcal{B}(\pi_{q \ell}) \qquad \bigg(\Leftrightarrow       X_{ij} | \set{Z_{iq}Z_{j\ell}=1} \sim \mathcal{B}(\pi_{q \ell}).
+ \bigg)
+    \end{equation*}
+    The $Q\times Q$ matrix ${\boldsymbol\pi}$  gives for all couple of labels $\pi_{q\ell}=\mathbb{P}(X_{ij}=1|i\in q, j\in\ell)$.
+   \end{block}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Stochastic Block Model: the big picture}
+
+  \begin{center}
+    \begin{overlayarea}{\textwidth}{.5\textheight}
+      \begin{columns}
+        \begin{column}{.45\paperwidth}
+        \begin{tikzpicture}
+          %% UN GRAPH
+
+          \tikzstyle{every edge}=[-,>=stealth',shorten >=1pt,auto,thin,draw]
+          \tikzstyle{every state}=[draw=none,text=white,scale=0.65, font=\scriptsize, transform shape]
+          \tikzstyle{every node}=[fill=yellow!40!orange]
+          % premier cluster
+          \node[state] (A1) at (0,0.5) {A1};
+          \node[state] (A2) at (1,0.5) {A2};
+          \node[state] (A3) at (.5,1.5) {A3};
+
+          \path (A2) edge [bend left] node[fill=white,below=.1cm]
+          {$\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{yellow!40!orange}{\bullet}}$}
+          (A1)
+          (A1) edge [bend left] (A3)
+          (A3) edge [bend left] (A2);
+
+          \tikzstyle{every node}=[fill=blue!80!black]
+          \foreach \angle/\text in {234/B1, 162/B2, 90/B3, 18/B4, -54/B5} {
+            \node[fill=blue,state,xshift=5cm,yshift=3.5cm]     (\text)    at
+            (\angle:1cm) {\text};
+          }
+          \path (B2) edge (B5)
+          (B1) edge (B4);
+          \foreach \from/\to in {1/2,2/3,4/5,5/1}{
+            \path (B\from) edge [bend left] (B\to);
+          }
+
+          \path    (B3)    edge     [bend    left]    node[fill=white]
+          {$\pi_{\textcolor{blue!80!black}{\bullet}\textcolor{blue!80!black}{\bullet}}$}  (B4) ;
+
+          \tikzstyle{every node}=[fill=green!50!black]
+          % troisieme cluster
+          \node[state] (C1) at (3,-.5) {C1};
+          \node[state] (C2) at (4,0) {C2};
+
+          \path (C1) edge [bend right] node[fill=white,below=.25cm]
+          {$\pi_{\textcolor{green!50!black}{\bullet}\textcolor{green!50!black}{\bullet}}$}
+          (C2);
+
+          % inter cluster
+          \path (A3) edge [bend right]  (B2)
+          (A3)    edge    [bend    left]    node[fill=white]
+          {$\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}}$}
+          (B3)
+          (C2) edge [bend right] node[fill=white,right]
+          {$\pi_{\textcolor{blue!80!black}{\bullet}\textcolor{green!50!black}{\bullet}}$}
+          (B4)
+          (A2) edge [bend right] node[fill=white]
+          {$\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{green!50!black}{\bullet}}$}
+          (C1);
+        \end{tikzpicture}
+        \end{column}
+        \begin{column}{.5\paperwidth}
+          \begin{small}
+            \begin{block}{Stochastic Block Model}
+              Let $n$ nodes divided into
+              \begin{itemize}
+              \item
+                $\mathcal{Q}=\{\textcolor{yellow!40!orange}{\bullet},\textcolor{blue!80!black}{\bullet},\textcolor{green!50!black}{\bullet}\}$
+                classes
+              \item  $\alpha_\bullet  =  \mathbb{P}(i  \in  \bullet)$,
+                $\bullet\in\mathcal{Q},i=1,\dots,n$
+              \item      $\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}}     =      \mathbb{P}(i
+                \leftrightarrow j | i\in\textcolor{yellow!40!orange}{\bullet},j\in\textcolor{blue!80!black}{\bullet})$
+              \end{itemize}
+            \end{block}
+          \end{small}
+        \end{column}
+      \end{columns}
+    \end{overlayarea}
+  \end{center}
+
+  \begin{align*}
+    Z_i = \mathbf{1}_{\{i \in \bullet\}}  \ & \sim^{\text{iid}} \mathcal{M}(1,\alpha), \quad \forall\bullet\in\mathcal{Q}, \\
+    X_{ij} \ | \ \{i\in\textcolor{yellow!40!orange}{\bullet},j\in\textcolor{blue!80!black}{\bullet}\} & \sim^{\text{ind}} \mathcal{B}(\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}})\\
+  \end{align*}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Stochastic Block Model: unknown parameters}
+
+    \begin{center}
+  \begin{overlayarea}{\textwidth}{.5\textheight}
+      \begin{columns}
+        \begin{column}{.45\paperwidth}
+        \begin{tikzpicture}
+          %% UN GRAPH
+
+          \tikzstyle{every edge}=[-,>=stealth',shorten >=1pt,auto,thin,draw]
+          \tikzstyle{every state}=[draw=none,text=white,scale=0.65, font=\scriptsize, transform shape]
+          \tikzstyle{every node}=[fill=gray]
+          % premier cluster
+          \node[state] (A1) at (0,0.5) {N1};
+          \node[state] (A2) at (1,0.5) {N2};
+          \node[state] (A3) at (.5,1.5) {N3};
+
+          \path (A2) edge [bend left] node[fill=white,below=.1cm]
+          {}
+          (A1)
+          (A1) edge [bend left] (A3)
+          (A3) edge [bend left] (A2);
+
+          \tikzstyle{every node}=[fill=blue!80!black]
+          \foreach \angle/\text in {234/N1, 162/N2, 90/N3, 18/N4, -54/N5} {
+            \node[fill=gray,state,xshift=5cm,yshift=3.5cm]     (\text)    at
+            (\angle:1cm) {\text};
+          }
+          \path (B2) edge (B5)
+          (B1) edge (B4);
+          \foreach \from/\to in {1/2,2/3,4/5,5/1}{
+            \path (B\from) edge [bend left] (B\to);
+          }
+
+          \path (B3) edge [bend left] node[fill=white] {}  (B4) ;
+
+          \tikzstyle{every node}=[fill=gray]
+          % troisime cluster
+          \node[state] (C1) at (3,-.5) {N1};
+          \node[state] (C2) at (4,0) {N2};
+
+          \path (C1) edge [bend right] (C2);
+
+          % inter cluster
+          \path (A3) edge [bend right]  (B2)
+          (A3)    edge    [bend    left]    node[fill=white]
+          {}
+          (B3)
+          (C2) edge [bend right] node[fill=white,right]
+          {}
+          (B4)
+          (A2) edge [bend right] node[fill=white]
+          {}
+          (C1);
+        \end{tikzpicture}
+        \end{column}
+        \begin{column}{.5\paperwidth}
+          \begin{small}
+            \begin{block}{Stochastic Block Model}
+              Let $n$ nodes divided into
+              \begin{itemize}
+              \item
+                $\mathcal{Q}=\{\textcolor{yellow!40!orange}{\bullet},\textcolor{blue!80!black}{\bullet},\textcolor{green!50!black}{\bullet}\}$,
+                $\text{card}(\mathcal{Q})$ known
+              \item  $\alpha_\bullet  =  ?$,
+              \item      $\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}}     =      ?$
+              \end{itemize}
+            \end{block}
+          \end{small}
+        \end{column}
+      \end{columns}
+    \end{overlayarea}
+    \end{center}
+
+  \begin{align*}
+    Z_i = \mathbf{1}_{\{i \in \bullet\}}  \ & \sim^{\text{iid}} \mathcal{M}(1,\alpha), \quad \forall\bullet\in\mathcal{Q}, \\
+    X_{ij} \ | \ \{i\in\textcolor{yellow!40!orange}{\bullet},j\in\textcolor{blue!80!black}{\bullet}\} & \sim^{\text{ind}} \mathcal{B}(\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}})\\
+  \end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Stochastic block models -- examples of topology}
+  \framesubtitle{Community network}
+
+<<>>=
+pi <- matrix(c(0.3,0.02,0.02,0.02,0.3,0.02,0.02,0.02,0.3),3,3)
+communities <- igraph::sample_sbm(100, pi, c(25, 50, 25))
+plot(communities, vertex.label=NA, vertex.color = rep(1:3,c(25, 50, 25)))
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Stochastic block models -- examples of topology}
+  \framesubtitle{Star network}
+
+<<>>=
+pi <- matrix(c(0.05,0.3,0.3,0),2,2)
+star <- igraph::sample_sbm(100, pi, c(4, 96))
+plot(star, vertex.label=NA, vertex.color = rep(1:2,c(4,96)))
+@
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Degree distributions}
+
+  \begin{block}{Conditional degree distribution}
+    The conditional degree distribution of a node $i\in q$ is
+    \begin{equation*}
+      D_i | i \in q \sim \mathrm{b}(n-1,\bar\pi) \approx \mathcal{P}(\lambda_q), \qquad \bar\pi_q = \sum_{\ell=1}^Q \alpha_\ell, \pi_{q\ell} \quad \lambda_q = (n-1)\bar\pi_q
+    \end{equation*}
+  \end{block}
+
+  \vfill
+
+  \begin{block}{Conditional degree distribution}
+    The degree distribution of a node $i$ can be approximated by a mixture of Poisson distributions:
+    \begin{equation*}
+      \prob(D_i = k) = \sum_{q=1}^Q\alpha_q \exp{\set{-\lambda_q}} \ \frac{\lambda_q^k}{k !}
+    \end{equation*}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Likelihoods}
+
+  \begin{block}{Complete-data loglikelihood}
+    \vspace{-.5cm}
+    \begin{equation*}
+      \log L(\bX,\bZ) = \sum_{i,q} Z_{iq} \log \alpha_q + \sum_{i<j,q,\ell} Z_{iq}Z_{j\ell} \log \pi_{q\ell}^{X_{ij}} (1-\pi_{q\ell})^{1-X_{ij}}.
+    \end{equation*}
+  \end{block}
+
+  \begin{block}{Conditional expectation of the complete-data loglikelihood}
+    \vspace{-.5cm}
+    \begin{equation*}
+      \E_{\bZ|\bX} \big[\log L(\btheta;\bX,\bZ) \big] = \sum_{i,q} \tau_{iq} \log \alpha_q + \sum_{i<j,q,\ell} \eta_{ijq\ell} \log \pi_{q\ell}^{X_{ij}} (1-\pi_{q\ell})^{1-X_{ij}}
+    \end{equation*}
+      where $\tau_ {iq}, \eta_{ijq\ell}$ are the posterior probabilities:
+      \begin{itemize}
+        \item $\tau_{iq} = \prob(Z_{iq} = 1 | \bX) = \E \left[Z_{iq} | \bX\right].$
+        \item $\eta_{ijq\ell} = \prob(Z_{iq}Z_{j\ell} = 1 | \bX) = \E \left[Z_{iq}Z_{j\ell} | \bX\right].$
+      \end{itemize}
+  \end{block}
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Inference in SBM with variational EM}
+%% ==========================================================================
+
+\begin{frame}
+  \frametitle{The EM strategy does not apply directly for SBM}
+
+  \begin{block}{Ouch: another intractability problem}
+    \begin{itemize}
+      \item the $Z_{iq}$ are \alert{not independent} in the SBM framework\dots
+      \item we cannot compute $\eta_{ijq\ell} = \prob(Z_{iq}Z_{j\ell} = 1 | \bX) = \E \left[Z_{iq}Z_{j\ell} | \bX\right]$,
+      \item the conditional expectation $Q(\btheta)$, i.e. the main EM ingredient, is \alert{intractable}.
+    \end{itemize}
+  \end{block}
+
+  \vfill
+
+  \begin{block}{Solution: mean field approximation}
+    Approximate $\eta_{ijq\ell}$ by $\tau_{iq}\tau_{j\ell}$, i.e., \alert{assume independence between $Z_{iq}$}\\
+
+    $\rightsquigarrow$ This can be formalized in the variational framework
+  \end{block}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Revisting the EM algorithm I}
+
+  \begin{proposition}
+    Consider a distribution $\mathbb{Q}$ for the $\set{Z_{iq}}$. We have
+    \begin{equation*}
+      \log L(\btheta; \bX) = \E_{\mathbb{Q}} [\log L(\btheta, \bX,\bZ)] + \mathcal{H}(\mathbb{Q}) + \mathrm{KL}(\mathbb{Q} \ | \ \prob(\bZ|\bX;\btheta)),
+    \end{equation*}
+    where $\mathcal{H}$ is the entropy and $\mathrm{KL}( \cdot| \cdot)$ is the Kullback-Leibler divergence:
+    \begin{gather*}
+      \mathcal{H}(\mathbb{Q}) = - \sum_z \mathbb{Q}(z) \log \mathbb{Q}(z) = - \E_\mathbb{Q} [\log \mathbb{Q} (Z)]\\
+      \mathcal{KL}(\mathbb{Q} \ | \ \prob(\bZ|\bX;\btheta)) = \sum_z \mathbb{Q}(z) \log \frac{\mathbb{Q}(z)}{\prob(\bZ|\bX;\btheta)} = \E_\mathbb{Q} \left[\log \frac{\mathbb{Q}(z)}{\prob(\bZ|\bX;\btheta)}\right]\\
+    \end{gather*}
+  \end{proposition}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Revisting the EM algorithm II}
+  Let
+   \begin{equation*}
+    J(\mathbb{Q},\btheta) \triangleq \E_{\mathbb{Q}}\left(\log L(\btheta ;\bX,\bZ)\right) + \mathcal{H}(\mathbb{Q})
+\end{equation*}
+
+  \vfill
+
+  The steps in the EM algorithm may be viewed as:
+  \begin{description}
+    \item[Expectation step]: choose $\mathbb{Q}$ to maximize $J(\mathbb{Q};\btheta^{(t)})$\\[2ex]
+      \alert{The solution is $\prob(\bZ|\bX;\btheta^{(t)})$}\\
+    \item[Maximization step]: choose $\btheta$ to maximize $J(\mathbb{Q}^{(t)};\btheta$)\\[2ex]
+      \alert{The solution maximizes $\E_{\bZ|\bX;\btheta^{(t)}}\left(\log L(\btheta ;\bX,\bZ)\right)$}
+  \end{description}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variational approximation for SBM}
+
+    \begin{block}{Problem for SBM}
+      $\prob(\bZ|\bX;\btheta^{(t)})$ cannot be computed thus the E-step cannot be solved.
+  \end{block}
+
+  \begin{block}{Idea}
+      Choose $\mathbb{Q}$ in a class of function so that the E-step can be solved.
+  \end{block}
+
+  \begin{block}{Family of distribution that factorizes}
+      We chose $\mathbb{Q}$ so as the $Z_{iq}$ are marginally independents:
+      \begin{equation*}
+        \mathbb{Q}(\bZ) = \prod_{i=1}^n \mathbb{Q}_i(Z_i) = \prod_{i=1}^n\prod_{q=1}^Q \tau_{iq}^{Z_{iq}},
+      \end{equation*}
+      where $\tau_{iq} =\mathbb{Q}_i(Z_{i} = q) = \E{Q}(Z_{iq})$, with $\sum_{q} \tau_{iq} = 1$ for all $i=1,\dots,n$.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variational EM for SBM: the criterion}
+
+  \begin{block}{Lower bound of the loglikehood}
+  Since $\mathbb{Q}$ is an approximation of $\prob(\bZ|\bX)$, the Kullback-Leibler divergence is non-negative and
+    \begin{equation*}
+      \log L(\btheta; \bX) \geq \E_{\mathbb{Q}} [\log L(\btheta, \bX,\bZ)] + \mathcal{H}(\mathbb{Q}) = J(\mathbb{Q},\btheta).
+    \end{equation*}
+  \end{block}
+
+  For the SBM,
+  \begin{equation*}
+  J(\mathbb{Q},\btheta) = \sum_{i,q} \tau_{iq} \log \alpha_q + \sum_{i<j,q,\ell}  \tau_{iq}  \tau_{j\ell} \log b(X_{ij} ; \pi_{q\ell}) - \sum_{i,q} \tau_{iq} \log(\tau_{iq}),
+  \end{equation*}
+
+  $\rightsquigarrow$ we optimize the loglikelihood lower bound $J(\mathbb{Q},\btheta) = J(\boldsymbol\tau,\btheta)$ in $(\boldsymbol\tau, \btheta)$.
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{E and M steps for SBM}
+
+  \begin{block}{Variational E-step}
+    Maximizing $J(\boldsymbol\tau)$ for fixed $\btheta$, we find a fixed-point relationship:
+    \begin{equation}
+      \hat{\tau}_{iq} \varpropto \alpha_q \prod_{j} \prod_{\ell} b(X_{ij}, \pi_{q\ell})^{\hat{\tau}_{j\ell}}
+    \end{equation}
+  \end{block}
+
+  \vfill
+
+  \begin{block}{M-step}
+    Maximizing $J(\btheta)$ for fixed $\boldsymbol\tau$, we find,
+    \begin{equation}
+\hat{\alpha}_q = \frac{1}{n}\sum_i \hat{\tau}_{iq} , \quad \hat\pi_{q\ell} = \frac{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell} X_{ij}}{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell}}.
+\end{equation}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Model selection}
+
+  We use our lower bound of the  loglikelihood to compute an approximation of the ICL
+  \begin{multline*}
+  \mathrm{vICL}(Q) = \E_{\hat{\mathbb{Q}}} [\log L(\hat{\btheta)};\bX,\bZ] \\ - \frac{1}{2} \left(\frac{Q(Q+1)}{2} \log \frac{n(n-1)}{2} + (Q-1) \log (n) \right),
+\end{multline*}
+where
+    \begin{equation*}
+      \E_{\hat{\mathbb{Q}}} [\log L(\hat\btheta; \bX,\bZ)] = J(\hat{\boldsymbol\tau},\hat\btheta) - \mathcal{H}(\hat{\mathbb{Q}}).
+    \end{equation*}
+
+    The variational BIC is just
+    \begin{equation*}
+  \mathrm{vBIC}(Q) = J(\hat{\boldsymbol\tau},\hat\btheta) - \frac{1}{2} \left(\frac{Q(Q+1)}{2} \log \frac{n(n-1)}{2} + (Q-1) \log (n) \right).
+    \end{equation*}
+
+\end{frame}
+
+\begin{frame}[fragile, allowframebreaks]
+  \frametitle{Example on the French blogsphere}
+
+<<example mixer, cache=TRUE>>=
+library(mixer)
+data(blog)
+mix.blog <- mixer(x=blog$links,qmin=2,qmax=20)
+plot(mix.blog)
+@
+
+\end{frame}
+
+
+\end{document}

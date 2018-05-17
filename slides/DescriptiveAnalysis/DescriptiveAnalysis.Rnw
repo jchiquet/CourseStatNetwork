@@ -1,0 +1,992 @@
+\documentclass{beamer}
+
+\def\currentCourse{An introduction to graph analysis and modeling}
+\def\currentInstitute{MSc in Statistics for Smart Data -- ENSAI}
+\def\currentLogo{../common_figs/logo_ensai}
+\def\currentDate{Automn semester, 2017}
+\def\currentChapter{Descriptive Analysis of Network Data}
+
+<<preamble, child='../common_preamble.Rnw'>>=
+@
+
+<<load_packages, echo=FALSE>>=
+library(igraph)
+library(sand)
+@
+
+\usetikzlibrary{calc,shapes,backgrounds,arrows,automata,shadows,positioning}
+
+\begin{document}
+
+\dotitlepage
+
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents
+\end{frame}
+
+%% ==========================================================================
+\section{Basic notions on graphs and networks}
+%% ==========================================================================
+
+\begin{frame} 
+  \frametitle{References}
+
+    \begin{thebibliography}{99}
+      \setbeamertemplate{bibliography item}[book]
+
+    \bibitem[EK2]{EK2} Statistical Analysis of Network Data: Methods and Models, 
+    \newblock \textcolor{black}{Eric Kolazcyk} 
+    \newblock \alert{Chapiter 2, Section 1}
+
+      \setbeamertemplate{bibliography item}[article]
+
+    \bibitem[CM1]{CM1} Analyse statistique de graphes, 
+    \newblock \textcolor{black}{Catherine Matias}
+    \newblock \alert{Chapitre 1}    
+
+    \end{thebibliography}
+
+\end{frame}
+
+\subsection{Definitions}
+
+\begin{frame}
+  \frametitle{Graphs, Networks: some definitions}
+
+  \begin{definition}[Network versus Graph]
+    \vspace{-.25cm}
+    \begin{itemize}
+      \item  A \alert{Network} is a collection of interacting entities
+      \item  A \alert{Graph} is the mathematical representation of a network
+    \end{itemize}
+  \end{definition}
+
+  \vfill
+
+  \begin{definition}[Graph]
+    A graph $\clG=(\clV,\clE)$ is a mathematical structure consisting of
+    \begin{itemize}
+      \item a set $\clV=\set{1,\dots,n}$ of \alert{vertices} or \alert{nodes} 
+      \item a set $\clE=\set{e_1,\dots,e_p:e_k=(i_k,j_k)\in (\clV\times\clV)}$ of \alert{edges} or \alert{links} 
+      \item The number of vertices $N_v=|\clV|$ is called the \alert{order}
+      \item The number of edges $N_e=|\clE|$ is called the \alert{size}
+    \end{itemize}
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graphs, Networks: some vocabulary}
+
+  \begin{block}{Not comprehensive}
+    \begin{itemize}
+      \item subgraph $\clH = (\clV_\clH, \clE_\clH)$, 
+      \item  induced subgraph
+      \item (un)directed graph, 
+      \item  weighted graph, 
+      \item  bipartite graph, 
+      \item  tree, 
+      \item  DAG, etc.
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Examples}
+\framesubtitle{Undirected, directed (digraph), complete, bipartite}
+
+<<basic_graphs, echo=FALSE>>=
+par(mfrow=c(2,2))
+plot(graph_from_literal(a---b, b---c))
+plot(graph_from_literal(a+--b, b+--c))
+plot(graph_from_literal(a:b:c---c:d:e))
+plot(graph_from_literal(a---c, b---d), vertex.color=c("red", "red", "blue", "blue"))
+@
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+  \frametitle{Paths, Cycles, Connected Components}
+
+  \begin{definition}[Path]
+    In a undirected graph $\clG = (\clV,\clE)$ a path  between $i,j\in \clV^2$ is a series of edges $e_1,\dots,e_k$ such that
+    \begin{itemize}
+      \item  $\forall 1 \leq \ell < k$, all edges $(e_\ell, e_{\ell+1})$ share a vertex in $\clV$
+      \item  $e_1$ starts from $i$, $e_k$ ends to $j$.
+    \end{itemize}
+  \end{definition}
+
+  \begin{block}{Vocabulary}
+    \vspace{-.25cm}
+    \begin{itemize}
+    \item  A \alert{cycle} is a path from $i$ to itself.
+    \item  A \alert{connected component} is a subset $\clV'\subset\clV$ such that there exists an path between any $i,j\in\clV'$.
+    \item A graph is \alert{connected} when there is a path between every pairs of vertices.
+    \end{itemize}
+  \end{block}
+
+  \begin{proposition}[Decomposition]
+    Any graph can be decomposed in a unique set of maximal connected components. The number of connected component is a least $n - |\clE|$
+  \end{proposition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Neighborhood, Degree}
+
+  \begin{definition}[Neighborhood]
+    The neighbors of a vertex are the nodes directly connected to this vertex:
+    \[
+      \clN(i) = \set{j\in\clV : (i,j) \in \clE}.
+    \]
+  \end{definition}
+  
+  \begin{definition}[Degree]
+    The degree $d_i$ of a node $i$ is given by its number of neighbors, i.e. $|\clN(i)|$.
+  \end{definition}
+
+  \begin{block}{Remark}
+    In digraphs, vertex degree is replaced by \alert{in-degree} and \alert{out-degree}.
+  \end{block}
+
+  \begin{proposition}
+    In a graph $\clG = (\clV,\clE)$ the sum of the degree is given by $2|\clE|$. Hence \alert{this is always an even quantity}.
+  \end{proposition}
+  
+  
+\end{frame}
+
+\subsection{Representations}
+
+\begin{frame}
+  \frametitle{Adjacency matrix and list of edges}
+
+  \begin{definition}[Ajacency matrix]
+    The connectivity of  $\clG = (\clV,\clE)$ is captured by the $|\clV|\times |\clV|$ matrix $\bA$:
+    \[
+      (\bA)_{ij} = \begin{cases}
+      1  & \text{ if } i \sim j,\\
+      0  & \text{otherwise}.
+      \end{cases}
+    \]
+  \end{definition}
+
+  \begin{proposition}
+    The degree of $\clG$ are then simply obtained as the row-wise and/or column-wise sums of $\bA$.
+  \end{proposition}
+
+  \begin{block}{Remark}
+    If the list of vertices is known, the only information which needs to be stored is the list of edges. In terms of storage, this is equivalent to a sparse matrix representation.
+  \end{block}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Incidence matrix}
+
+  \begin{definition}[Incidence matrix]
+    The connectivity of $\clG = (\clV,\clE)$ is captured by the $|\clV|\times |\clE|$ matrix $\bB$:
+    \[
+      (\bB)_{ij} = \begin{cases}
+      1  & \text{ if $i$ is incident to edge $j$},\\
+      0  & \text{otherwise}.
+      \end{cases}
+    \]
+  \end{definition}
+
+  \begin{proposition}[Relationship]
+    Let $\tilde\bB$ be a modified \alert{signed} version of $\bB$ where $\tilde{\! B}_{ij}= 1/-1$ if $i$ is incident to $j$ as tail/head. Then
+    \[
+      \tilde \bB \tilde \bB^\intercal = \bD - \bA,
+    \]
+    where $\bD = \diag(\set{d_i, i\in\clV})$ is the diagonal matrix of degrees. 
+  \end{proposition}
+
+  $\rightsquigarrow \tilde \bB \tilde \bB^\intercal $ is called the Laplacian matrix and will be studied latter.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Layout and Vizualization}
+  
+  \begin{itemize}
+    \item Vizualization of large networks is a field of research in its own
+    \item Be carefull with graphical interpretation of (large) networks
+  \end{itemize}
+
+<<vizu_1, echo=TRUE>>=
+library(igraph)
+
+library(sand)
+
+GLattice <- graph.lattice(c(5,5,5))
+
+GBlog    <- aidsblog
+@
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Layout and Vizualization}
+  \framesubtitle{Example with circle plot}
+  
+<<vizu_2, echo=FALSE>>=
+igraph.options(vertex.size=3, vertex.label=NA, edge.arrow.size=.5)
+@
+
+<<vizu_3, echo=TRUE>>=
+par(mfrow=c(1,2))
+
+plot(GLattice, layout=layout.circle); title("5x5x5 lattice")
+
+plot(GBlog   , layout=layout.circle); title("blog network")
+@
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Layout and Vizualization}
+  \framesubtitle{Example with Fruchterman and Reingold}
+
+<<vizu_4, echo=TRUE>>=
+par(mfrow=c(1,2))
+
+plot(GLattice, layout=layout.fruchterman.reingold); title("5x5x5 lattice")
+
+plot(GBlog   , layout=layout.fruchterman.reingold); title("blog network")
+@
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Layout and Vizualization}
+  \framesubtitle{Do not be fooled by the plot}
+
+<<vizu_5, echo=TRUE>>=
+g.tree <- graph.formula(1-+2,1-+3,1-+4,2-+5,2-+6,2-+7, 3-+8,3-+9,4-+10)
+
+par(mfrow=c(1, 3))
+
+igraph.options(vertex.size=30, edge.arrow.size=0.5, vertex.label=NULL)
+
+plot(g.tree, layout=layout.circle)
+
+plot(g.tree, layout=layout.reingold.tilford(g.tree,  circular=T))
+
+plot(g.tree, layout=layout.reingold.tilford)
+@
+  
+\end{frame}
+
+
+%% ==========================================================================
+\section{Descriptive statistics}
+%% ==========================================================================
+
+\begin{frame} 
+  \frametitle{References}
+
+    \begin{thebibliography}{99}
+      \setbeamertemplate{bibliography item}[book]
+
+    \bibitem[EK2]{EK2} Statistical Analysis of Network Data: Methods and Models, 
+    \newblock \textcolor{black}{Eric Kolazcyk}
+    \newblock \alert{Chapiter 4, Sections 2 and 3}
+
+    \bibitem[EK1]{EK1} Statistical Analysis of Network Data with \texttt{R}, 
+    \newblock \textcolor{black}{Eric Kolazcyk, G\'abor Cs\'ardi}
+    \newblock \alert{Chapiter 4, Sections 2 and 3}
+
+      \setbeamertemplate{bibliography item}[article]
+
+    \bibitem[CM1]{CM1} Analyse statistique de graphes, 
+    \newblock \textcolor{black}{Catherine Matias}
+    \newblock \alert{Chapitre 2}
+
+    \end{thebibliography}
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Vertex characteristics}
+
+\begin{frame}
+  \frametitle{Vertex degree}
+  
+  \begin{definition}[Degree distribution]
+    In a graph $\clG = (\clV, \clE)$, recall that $d_i$ counts the number of incident edges in $\clE$ to $i$. Define $f_d$ to be
+    the fraction of vertices $i\in \clV$ with degree $d_i=d$. The collection $\set{f_d, d\geq 0}$ is called the \alert{degree distribution} of $\clG$.
+  \end{definition}
+  
+  \begin{block}{Property}
+    Many real world networks have a degree distribution fitting well power law distributions: 
+    \[
+      f_{d_i}(d) = \P(d_i = d) = \frac{c}{d^\gamma}, \quad c\in\Rset, \gamma > 0.
+    \]
+  \end{block}
+  Those heavy-tail distributions describe few vertices with very high degrees.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Vertex degree: example I}
+
+<<degree_1>>=
+library(sand) 
+data(karate)
+
+par(mfrow=c(1,2))
+plot(karate)
+
+hist(degree(karate), col=adjustcolor("lightblue", alpha.f = 0.5), main="")
+@
+      
+\end{frame}
+
+\begin{frame}
+  \frametitle{Vertex degree: example II}
+
+<<degree_2>>=
+library(igraphdata) 
+data(yeast)
+
+degrees.yeast <- rev(sort(degree.distribution(yeast)))
+
+plot(degrees.yeast[degrees.yeast!=0], log="xy", col=adjustcolor("blue", alpha.f = 0.5), pch=16, xlab="log degree", ylab="log-intensity")
+@
+      
+\end{frame}
+
+\begin{frame}
+  \frametitle{Joint vertex degree distribution}
+
+  \begin{definition}[Empirical distribution of $(d_i, d_j)$]
+    Let $\clG = (\clV,\clE$ be an undirected network an let $N(k,\ell)$ be the number of edges whose node have respective degrees equal to $(k,\ell)$ or $(\ell,k)$. Then the empirical distribution of $(d_i,d_j)$ is given by
+    \[
+      f_{k\ell} = \begin{cases}
+      N(k,\ell)/2|\clE| & \text{ if } k < \ell \\
+      N(\ell,k)/2|\clE| & \text{ if } k > \ell \\
+      N(k,k)/|\clE| & \text{ if } k = \ell \\
+      \end{cases}
+    \]
+  \end{definition}
+
+  \vfill  
+  
+  \begin{block}{Idea/principle: \textcolor{black}{What kind of nodes share an edge ? }}
+    \textit{E.g.} are nodes with high degrees connected with themselves or with low degree vertices?
+  \end{block}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Joint degree distribution: example for yeast PPI network}
+
+  \begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.6\textwidth]{figures/joint_degree_yeast}
+  \caption{Image representation of the logarithmically transformed joint degree distribution $\log_2 f_{k\ell}$ of the yeast PPI network (\textit{source}: E. Kolazcyk)}
+  \end{figure}
+  
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+  \frametitle{Distance and diameter}
+
+  \begin{definition}[distance]
+    \begin{itemize}
+    \item \alert{The Length}  of a path $e_1,\dots, e_k$ is the number of edges enterin the path (here $k$).
+    \item If two nodes $i,j$ are connected in $G$, then \alert{the distance} $\ell_{ij}$ is the length of the shortest path between $i$ and $j$. If the two nodes are not connected then $\ell_{ij} = \infty$.
+    \end{itemize}
+  \end{definition}
+
+  \framebreak
+
+  \begin{definition}[mean distance]
+    Mean distance in $\clG = (\clV,\clE)$ is defined by
+    \[
+      \bar{\ell} = \frac{1}{n(n-1)}\sum_{(i,j)\in\clV^2} \ell_{ij} = \frac{2}{n(n-1)}\sum_{i<j} \ell_{ij}.
+    \]
+  \end{definition}
+
+  \begin{definition}[diameter]
+    The diameter of $\clG$ is the greatest distance between two nodes:
+    \[
+      \mathrm{diameter(\clG)} = \max_{(i,j)\in\clV\times\clV} \left(\ell_{ij}\right)
+    \]
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks]
+  \frametitle{Distance, Diameter: example}
+<<distances1>>=
+library(Matrix)
+data(ppi.CC)
+diameter(ppi.CC)
+average.path.length(ppi.CC)
+image(Matrix(distances(ppi.CC)))
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Vertex centrality: closeness}
+
+  \begin{block}{Question}
+    How important is the node/vertice in the network?
+  \end{block}
+
+  \begin{definition}[Closeness]
+    Closeness is the sum of the length of the shortest paths between the node and all other nodes in the graph. It can be defined as the reciprocal of the farness:
+    \[C(x)={\frac  {1}{\sum _{y}d(y,x)}}.\]
+    $\rightsquigarrow$ \textit{The more central a node is, the closer it is to all other nodes.}
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Vertex centrality: betweenness}
+
+  \begin{block}{Question}
+    How important is the node/vertice in the network?
+  \end{block}
+
+  \begin{definition}[Betweenness]
+    For every pairs of vertices, there exists at least one shortest path between the vertices such that the number of edges that the path passes through is minimized.
+    The betweenness centrality for each vertex is the number of these shortest paths that pass through the vertex: 
+    \[
+        g(i)=\sum _{{j\neq i\neq k}}{\frac  {\sigma _{{jk}}(i)}{\sigma _{{jk}}}}    
+    \]
+    where $\sigma _{jk}$ is the total number of shortest paths from node $j$ to node $k$ and $\sigma _{jk}(i)$ the number of those paths that pass through $i$.
+
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Example for karate club data set}
+  \framesubtitle{administrator and instructor are in blue and yellow}
+
+<<density, cache=TRUE, echo=FALSE, out.width='\\textwidth'>>=
+library(sna)
+A <- get.adjacency(karate, sparse=FALSE)
+library(network)
+g <- network::as.network.matrix(A)
+par(mfrow=c(1,3))
+sna::gplot.target(g, degree(g), main="Degree",circ.lab = FALSE, circ.col="skyblue", usearrows = FALSE, vertex.col=c("blue", rep("red", 32), "yellow"), edge.col="darkgray")
+sna::gplot.target(g, closeness(g), main="Closeness",
+   circ.lab = FALSE, circ.col="skyblue",
+   usearrows = FALSE,
+   vertex.col=c("blue", rep("red", 32), "yellow"),
+   edge.col="darkgray")
+sna::gplot.target(g, betweenness(g), main="Betweeness",
+   circ.lab = FALSE, circ.col="skyblue",
+   usearrows = FALSE,
+   vertex.col=c("blue", rep("red", 32), "yellow"),
+   edge.col="darkgray")
+@
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Jaccard Coefficient}
+
+  \begin{definition}[Jaccard Coefficient or Jaccard Index]
+The Jaccard coefficient \alert{measures similarity between finite sample sets}, and is defined as the size of the intersection divided by the size of the union of the sample sets:
+  \[
+  J(A,B)=\frac{|A\cap B|}{|A\cup B|} =\frac{|A\cap B|}{|A|+|B|-|A\cap B|}.
+  \]
+  \end{definition}
+
+  \begin{block}{Example}
+  It can be used to compared two sets of egdes. For instance
+  \begin{itemize}
+    \item for two networks $\clG$ and $\clH$ defined on the same set of node, we can compare the sets $\clE_\clG$ and $\clE_\clH$.
+    \item for a networks $\clG$ we can compute similarity between nodes with the Jaccard index and use it to define a weighted graph of similarity.
+  \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Jaccard Coefficient: example}
+
+Plot the yeast PPI interaction network
+<<jaccard>>=
+library(sand)
+library(igraph)
+plot(ppi.CC, vertex.size=6, vertex.label=NA, layout=layout_in_circle)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Jaccard Coefficient: example II}
+
+Compute Jaccard similarity between vertices and give a image of this
+<<jaccardplot>>=
+library(Matrix)
+image(Matrix(igraph::similarity(ppi.CC, method = "jaccard")))
+@
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Local measurements}
+
+\begin{frame}
+  \frametitle{Density}
+
+  \begin{block}{Question}
+    Is the network locally \alert{dense} in some sense?
+  \end{block}
+
+  \begin{definition}[Clique]
+    In an undirected graph, a clique is a subset of the vertices such that \alert{every two distinct vertices are adjacent}.
+  \end{definition}
+
+
+  \begin{definition}[Density]
+    The density of a (sub)-graph $\clG = (\clV,\clE)$ is defined by
+    \[
+      \mathrm{density}(\clG) = \frac{2|\clE|}{|\clV|(|\clV| - 1)} = \frac{\bar{D}}{|V|-1},
+    \]
+    where $\bar{D}$ is the mean degree of the network: how much $\clG$ is close to a clique? 
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Clustering}
+
+  \begin{block}{Question}
+    Is the network locally \alert{dense} in some sense?
+  \end{block}
+
+  \begin{definition}[Triangle]
+    Triplets of vertices in the graph that are connected through a triangle. They correspond to transitive relationships. We let 
+    \begin{itemize}
+      \item $\tau_{\Delta}(i)$ be the number of triangles in $\clG$ where $i$ falls.
+      \item $\tau_{3}(i)$ be the number of triplets in $\clG$ where $i$ falls.
+    \end{itemize}    
+  \end{definition}
+
+
+  \begin{definition}[Clustering coefficient]
+    \[
+      \mathrm{clustering}(\clG) = \frac{1}{\clV_2} \sum_{i\in\clV_2} \tau_{\Delta}(i) / \tau_3(i),
+    \]
+    where $\clV_2$ is the set of vertices whose degree is greater or equal to 2.
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Transitivity}
+
+  \begin{block}{Question}
+    Is the network locally \alert{dense} in some sense?
+  \end{block}
+
+  \begin{definition}[Triangle]
+    Triplet of vertices in the graph that are connected through a triangle. They correspond to transitive relationships. We let 
+    \begin{itemize}
+      \item $\tau_{\Delta}(i)$ be the number of triangle in $\clG$ where $i$ falls.
+      \item $\tau_{3}(i)$ be the number of triplet in $\clG$ where $i$ falls.
+    \end{itemize}    
+  \end{definition}
+
+  \begin{definition}[Transitivity]
+    
+    \[
+      \mathrm{transitivity}(\clG) = \frac{\sum_{\clV}\tau_{\Delta}(i)}{\sum_{\clV}\tau_3(i)},
+    \]
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Motifs}
+
+  \begin{block}{Question}
+    Is the network locally \alert{dense} in some sense?
+  \end{block}
+
+  $\rightsquigarrow$ This question can be ansered thank to more complicated motifs than cliques and triangles\dots
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Local density: example}
+
+<<echo=FALSE>>=
+rm(sna)
+@
+
+Create ego graphs around teacher and instructor
+<<density2>>=
+
+data(karate)
+
+ego.instr <- induced.subgraph(karate, neighborhood(karate, 1, 1)[[1]])
+
+ego.admin <- induced.subgraph(karate, neighborhood(karate, 1, 34)[[1]])
+@
+
+<<density3, echo=FALSE>>=
+par(mfrow=c(1,3))
+plot(karate)
+plot(ego.instr)
+plot(ego.admin)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Local density: example II}
+
+Maximal clique size, number of triangle
+<<density4, >>=
+clique.number(karate)
+clique.number(ego.admin)
+length(triangles(karate))
+length(triangles(ego.admin))
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Local density: example III}
+
+Efficient motif counts
+<<density41, >>=
+cliques(karate, min = 5)
+count_triangles(karate)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Local density: example IV}
+
+Look for graph density and transitivity/clustering either globally or locally
+<<density5>>=
+graph.density(karate)
+graph.density(ego.instr)
+graph.density(ego.admin)
+transitivity(karate)
+transitivity(karate, "local", vids=c(1,34))
+@
+
+\end{frame}
+
+
+%% ==========================================================================
+\section{Graph Partionning}
+%% ==========================================================================
+
+\begin{frame} 
+  \frametitle{References}
+
+    \begin{thebibliography}{99}
+      \setbeamertemplate{bibliography item}[book]
+
+    \bibitem[EK2]{EK2} Statistical Analysis of Network Data: Methods and Models,
+    \newblock \textcolor{black}{Eric Kolazcyk}
+    \newblock \alert{Chapiter 4, Section 4}
+
+    \bibitem[EK1]{EK1} Statistical Analysis of Network Data with \texttt{R}, 
+    \newblock \textcolor{black}{Eric Kolazcyk, G\'abor Cs\'ardi}
+    \newblock \alert{Chapiter 4, Section 4}
+
+      \setbeamertemplate{bibliography item}[article]
+
+    \bibitem[CM1]{CM1} Analyse statistique de graphes, 
+    \newblock \textcolor{black}{Catherine Matias}
+    \newblock \alert{Chapitre 3}
+    
+    \bibitem[VLB]{VLB} A Tutorial on Spectral Clustering, 
+    \newblock \textcolor{black}{Ulrike von Luxburg}
+
+    \end{thebibliography}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Principle of graph partionning}
+
+  \begin{definition}[Partition]
+    A decomposition $\mathcal{C} = \{C_1,\dots,C_K\}$ of the vertices $\clV$ such that
+    \begin{itemize}
+      \item $C_k \cap C_{k'} = \emptyset$ for any $k\neq k'$
+      \item $\bigcup_{k} C_k = \clV$
+    \end{itemize}
+  \end{definition}
+
+  \vfill
+
+  \begin{block}{Goal of graph paritionning}
+    Form a partition of the vertices with unsupervized approach where the $\mathcal{C}$ is composed by \alert{"cohesive"} sets of vertices, for instance,
+    \begin{enumerate}
+      \item vertices well connected among themselves
+      \item well separated from the remaining vertices
+    \end{enumerate}
+    
+  \end{block}
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Hierarchical clustering}
+
+\begin{frame}
+  \frametitle{Principle}
+  \framesubtitle{}
+
+
+  \begin{algorithm}[H]
+    \KwIn{$n$ individuals with $p$ attributes)}
+    \BlankLine\BlankLine
+    \DontPrintSemicolon
+      1. Compute the dissimilarity between groups \;
+      2. Regroup the two most similar elements \;
+      
+      Iterate until all element are in a single group \;
+    \BlankLine\BlankLine
+    \KwOut{$n$ nested partitions from $\set{\set{1},\dots,\set{n}}$ to $\set{\set{1,\dots,n}}$}
+
+    \caption{Agglomerative hierarchical clustering}
+  \end{algorithm}
+  
+  \begin{block}{Ingredients}
+    \begin{enumerate}
+      \item a dissimilarity measure between singleton
+      \item a distance measure between sets
+    \end{enumerate}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Dissimilarity measures}
+
+  \begin{block}{Standards}
+    Use standard distances on adjacency matrix:
+    \begin{itemize}
+      \item Euclidean distance: $\displaystyle x_{ij} = \sqrt{\sum_{ij} (A_{ik} - A_{jk})^2} $
+      \item Manhattan distance: $\displaystyle x_{ij} = \sum_{ij} |A_{ik} - A_{jk})^2| $
+      \item  etc\dots
+    \end{itemize}  
+  \end{block}
+
+  \vfill
+
+  \begin{block}{Graph-specific}
+    For instance,  Modularity (studied during tutorial)
+  \end{block}
+  
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks]
+  \frametitle{Examples of graph clustering}
+
+<<>>=
+hc <- cluster_fast_greedy(karate)
+plot(hc,karate)
+@
+
+<<>>=
+hc <- cluster_edge_betweenness(karate)
+plot(hc,karate)
+@
+
+<<>>=
+hc <- cluster_walktrap(karate)
+plot(hc,karate)
+@
+
+\end{frame}
+
+%% ==========================================================================
+\subsection{Spectral Clustering}
+
+\begin{frame}
+  \frametitle{Graph Laplacian}
+
+  \begin{definition}[(Un-normalized) Laplacian]
+    The Laplacian matrix $\bL$, resulting from the modified incidence matrix $\tilde\bB$ $\tilde{\! B}_{ij}= 1/-1$ if $i$ is incident to $j$ as tail/head, is defined by 
+    \[
+      \bL = \tilde \bB \tilde \bB^\intercal = \bD - \bA,
+    \]
+    where $\bD = \diag(d_i, i\in\clV)$ is the diagonal matrix of degrees. 
+  \end{definition}
+
+  \begin{block}{Remark}
+    \begin{itemize}
+    \item $\bL$ is called Laplacian by analogy to the second order derivative (see below).
+    \item Spectrum of $\bL$ has much to say about the structure of the graph $\clG$.
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph Laplacian: spectrum}
+
+  \begin{proposition}[Spectrum of $\bL$]
+    The $n\times n$ matrix $\bL$ has the following properties:
+    \[
+      \bx^\top \bL \bx = \frac{1}{2} \sum_{i,j} A_{ij} (x_i - x_j)^2, \quad \forall \bx\in\Rset^n .
+    \]
+    \vspace{-.25cm}
+    \begin{itemize}
+      \item $\bL$ is a symmetric, positive semi-definite matrix,
+      \item  the smallest eigenvalue is $0$ with associated eigenvector $\mathbf{1}$.K
+      \item $\bL$ has $n$ positive eigenvalues $0=\lambda_1<\dots <\lambda_n$. 
+    \end{itemize}  
+  \end{proposition}
+
+  \begin{corollary}[Spectrum and Graph]
+    \vspace{-.25cm}
+    \begin{itemize}
+      \item The multiplicity of the first eigen value ($0$) of $\bL$ determines the number of connected components in the graph.
+      \item The larger the second non trivial eigenvalue, the higher the connectivity of $\clG$.
+    \end{itemize}  
+  \end{corollary}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Normalized Graph Laplacian}
+
+  \begin{definition}[(Normalized) Laplacian]
+    The normalized Laplacian matrix $\bL$ is defined by 
+    \[
+      \bL_N = \bD^{-1/2}\bL\bD^{-1/2} = \bI - \bD^{-1/2} \bA \bD^{-1/2}.
+    \]
+  \end{definition}
+
+  \begin{proposition}
+    The $n\times n$ matrix $\bL_N$ has the following properties:
+      \[
+        \bx^\top \bL_N \bx = \frac{1}{2} \sum_{i,j} A_{ij}\left(\frac{x_i}{\sqrt{d_i}} - \frac{x_j}{\sqrt{d_j}} \right)^2, quad\forall\bx\in\Rset^n.
+      \]
+    \vspace{-.25cm}
+    \begin{itemize}
+      \item $\bL$ is a symmetric, positive semi-definite matrix, with $n$ nonnegative eigenvalues $0=\lambda_1<\dots <\lambda_n$
+      \item  the smallest eigenvalue is $0$ with associated eigenvector $\bD^{-1/2}\mathbf{1}$.
+    \end{itemize}  
+  \end{proposition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Absolute Graph Laplacian}
+
+  \begin{definition}[(Absolute) Laplacian]
+    The absolute Laplacian matrix $\bL_{abs}$ is defined by 
+    \[
+      \bL_{abs} = \bD^{-1/2}\bA\bD^{-1/2} = \bI - \bL_N,
+    \]
+    with eigenvalues $1-\lambda_n \leq \dots \leq 1-\lambda_2 \leq 1-\lambda_1 = 1$, where $0=\lambda_1\leq \dots \leq \lambda_n$ are the eigenvalues of $\bL_N$.
+  \end{definition}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Spectral Clustering}
+    
+  \begin{block}{Principle}
+  
+  \begin{enumerate}
+    \item Use the spectral property of $\bL$ to perform clustering in the eigen space \medskip
+    \item If the network have $K$ connected components, the first $K$ eigenvectors are $\mathbf{1}$ span the eigenspace associated with eigenvalue $0$ \medskip
+    \item Applying a simple clustering algorithm to the rows of the $K$ first eigenvectors separate the components
+  \end{enumerate}
+  $\rightsquigarrow$ This principle generalizes to a graph with a single component: spectral clustering tends to separates groups of nodes which are highly connected together
+  
+  \end{block}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Normalized Spectral Clustering}
+
+\begin{algorithm}[H]
+  \KwIn{Adjacency matrix and number of classes $Q$}
+  \BlankLine\BlankLine
+  \DontPrintSemicolon
+  
+  Compute the normalized graph Laplacian $\mathbf{L}$\;
+  Compute the eigen vectors of $\mathbf{L}$ associated with the $Q$ \alert{smallest eigenvalues}\;
+  Define $\mathbf{U}$,  the $p\times Q$ matrix  that encompasses these $Q$ vectors \;
+  Define $\tilde{\mathbf{U}}$, the row-wise normalized version of $\mathbf{U}$: $ \tilde{u}_{ij} = \frac{u_{ij}}{\| \mathbf{U}_i\|_2}$\;
+  Apply k-means to $(\tilde{\mathbf{U}}_i)_{i=1,\dots,p}$
+
+  \BlankLine\BlankLine
+  \KwOut{vector of classes $\mathbf{C}\in \mathcal{Q}^p$, such as  $C_i = q$ if $i\in q$}
+
+  \caption{Spectral Clustering by Ng, Jordan and Weiss (2002)}
+\end{algorithm}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Absolute Spectral Clustering}
+
+\begin{algorithm}[H]
+  \KwIn{Adjacency matrix and number of classes $Q$}
+  \BlankLine\BlankLine
+  \DontPrintSemicolon
+  
+  Compute the graph Laplacian $\mathbf{L}_{abs}$\;
+  Compute the eigen vectors of $\mathbf{L}_{abs}$ associated with the $Q$ \alert{largest} absolute eigenvalues\;
+  Define $\mathbf{U}$,  the $p\times Q$ matrix  that encompasses these $Q$ vectors \;
+  Apply k-means to $(\mathbf{U}_i)_{i=1,\dots,p}$
+
+  \BlankLine\BlankLine
+  \KwOut{vector of classes $\mathbf{C}\in \mathcal{Q}^p$, such as  $C_i = q$ if $i\in q$}
+
+  \caption{Spectral Clustering by Rohe et al. (2011)}
+\end{algorithm}
+
+\end{frame}
+
+\begin{frame}[fragile,allowframebreaks]
+  \frametitle{Example: Karate club and Fielder vector and eigenvalue}
+
+<<>>=
+k.lap <- graph.laplacian(karate)
+eig.anal <- eigen(k.lap)
+
+
+f.vec <- eig.anal$vectors[, 33]
+faction <- get.vertex.attribute(karate, "Faction")
+f.colors <- as.character(length(faction))
+f.colors[faction == 1] <- "red"
+f.colors[faction == 2] <- "cyan"
+
+par(mfrow=c(1,2))
+plot(eig.anal$values, col="blue",
+   ylab="Eigenvalues of Graph Laplacian")
+plot(f.vec, pch=16, xlab="Actor Number",
+   ylab="Fiedler Vector Entry", col=f.colors)
+abline(0, 0, lwd=2, col="lightgray")
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Clustering based on the first non null eigenvalue}
+  
+<<>>=
+hc <- cluster_leading_eigen(karate)
+plot(hc,karate)
+@
+
+\end{frame}
+
+
+\end{document}
