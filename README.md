@@ -23,9 +23,9 @@ November the 15th, 2018
 
   - *Course*: Mixture Models, (variational) EM algorithm, Stochastic
     Block Model -
-    [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/GraphModel/GraphModel.pdf)
+    [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/GraphModel/GraphModels.pdf)
   - *Tutorial*: Stochastic Block Model and variational inference
-    [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/GraphModel/tuto_GraphModel.pdf)
+    [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/GraphModels/tuto_GraphModels.pdf)
 
 ### Statistical Models for Networks Data: extension
 
