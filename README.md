@@ -1,9 +1,56 @@
-# Course for Network and Graph Analysis
+An introduction to graph analysis and modeling
+================
 
-Some material for a course about statistical analysis of networks and inference of some random graph models.
+> This repository regroups the material (slides, practicals, projects)
+> associated to the course about “graph analysis and modeling”, as a
+> part of the [MSc in Statistics for Smart
+> Data](http://www.ensai.fr/formation/msc-in-statistics-for-smart-data.html).
 
-For now, there are two chapters
+## Program
 
-- Descriptive Analysis of Network and Igraph Basics
-- Inference in the Stochastic Bloc Model
+### Descriptive Analysis of Network Data
 
+  - *Course* Statistics on network data, Graph Partitionning -
+    [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/DescriptiveAnalysis/DescriptiveAnalysis.pdf)
+  - *Tutorial* Basical graph manipulation and Spectral Clustering
+    [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis.pdf)
+
+### Statistical Models for Networks Data
+
+  - *Course*: Mixture Models, (variational) EM algorithm, Stochastic
+    Block Model - [slides]()
+  - *Tutorial*: Stochastic Block Model and variational inference
+    [sheet]()
+
+## Schedule
+
+### Projects: extension of the stochastic block model
+
+### <span class="glyphicon glyphicon-download-alt"></span> Documents
+
+  - slides 0:
+    [Introduction](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/Introduction/Introduction.pdf)
+  - [Rstudio cheat
+    sheets](https://www.rstudio.com/resources/cheatsheets/)
+
+### <span class="glyphicon glyphicon-book"></span> References
+
+Some book (not freely available, sorry)
+
+  - [Statistical Analysis of Network Data: Methods and Models, by Eric
+    D.
+    Kolaczyk](https://books.google.fr/books?id=Q-GNLsqq7QwC&source=gbs_book_similarbooks)
+  - [Statistical Analysis of Network Data with R, by Eric D. Kolaczyk,
+    Gábor
+    Csárdi](https://books.google.fr/books?id=cNMhBAAAQBAJ&source=gbs_navlinks_s)
+  - Bishop, C. (2000). Introduction to graphical modelling, 2nd edn.
+    Springer, New York.
+  - Højsgaard, S., Edwards , D., Lauritzen, S. (2012). Graphical Models
+    with R. Springer, New York.
+
+Some material online
+
+  - [Eric D. Kolazcyk’s course
+    slides](http://math.bu.edu/ness12/ness2012-shortcourse-kolaczyk.pdf)
+  - [Catherine Matias’s course page (in
+    French)](http://cmatias.perso.math.cnrs.fr/Cours_Graphes.html)
