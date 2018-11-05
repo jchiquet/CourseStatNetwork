@@ -1,10 +1,10 @@
 ---
 title: "Tutorial: Inference in the Stochastic Block Model"
 author: "MSc in Statistics for Smart Data -- Introduction to graph analysis and modeling"
-date: "Julien Chiquet, November the 7, 2017"
+date: "Julien Chiquet, November the 15th, 2018"
 fontsize: 11pt
 lang: en
-geometry: left=1.45in,top=1.35in,right=1.45in,bottom=1.35in
+geometry: left=1.2in,top=1.35in,right=1.2in,bottom=1.35in
 classoption: a4paper
 linkcolor: red
 urlcolor: blue
@@ -26,33 +26,38 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \textsf{Goals.}
 
-1. Random graphs generation and corresponding Gaussian data: Erdös-Rényi, Community networks, star-network, scale-free
-2. sparse inference methods for Gaussian Graphical models
-3. Analysis of some real world data
+1. Random graphs generation: Erdös-Rényi, Stochastic Block Models
+2. Variational inference for the stochastic block model
+3. Analysis of some real world network
 
 \textsf{Instructions.} Each student _must_ send an `R markdown` report generated via `R studio` to <julien.chiquet@inra.fr> at the end of the tutorial. This report should answer the questions by commentaries and codes generating appropriate graphical outputs. [A cheat sheet of the  markdown syntax can be found here.](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 
-\textsf{Required packages.} Check that the following packages are correctly available on your plateform:
+\textsf{Required packages.} Check that the following packages are available on your computer:
 ```{r, message=FALSE}
-library(huge)
-library(glmnet)
+library(igraph)
 library(sand)
+library(Matrix)
+library(devtools)
+library(blockmodels)
+library(mixer)
+library(aricode)
 ```
 
 You also need `Rstudio`, \LaTeX\ and packages for markdown: 
-
 ```{r, message=FALSE}
 library(knitr)
 library(rmarkdown)
+```
+If( and only if!!) you have time, you can also play with 
+```{r, message=FALSE}
+library(ggraph)
 ```
 
 # Background
 
 ## Notations
 
-We let  $\mathcal{P} =  \{1,\dots,p\}$ be  a set  of nodes. Presence  or absence  of an  edge  between two  nodes $i$  and $j$  is described by the random variable $X_{ij} = \mathbf{1}_{\{i \leftrightarrow j\}}$.
-We  assume  by  convention  that   the  nodes  are  not  connected  to
-themselves,  that is,  $X_{ii}=0$ for  all $i\in\mathcal{P}$.  
+We let  $\mathcal{P} =  \{1,\dots,p\}$ be  a set  of nodes. Presence  or absence  of an  edge  between two  nodes $i$  and $j$  is described by the random variable $X_{ij} = \mathbf{1}_{\{i \leftrightarrow j\}}$. We  assume  by  convention  that   the  nodes  are  not  connected  to themselves,  that is,  $X_{ii}=0$ for  all $i\in\mathcal{P}$.
 
 ## Stochastic Block Model
 
@@ -78,7 +83,7 @@ Finally, let  $\pi_{q\ell}$ be the  probability that a node  in class $q$ connec
 To sum up, the parameters are
 
   - $\mathbf{X}=(X_{ij})$,  the  $p\times  p$  adjacency matrix of the graph,
-  - ${\boldsymbol\pi} = (\pi_{q\ell})$ the $Q\times Q$ connectivity matrix, 
+  - ${\boldsymbol\pi} = (\pi_{q\ell})$ the $Q\times Q$ connectivity matrix,
   - ${\boldsymbol \alpha} = (\alpha_q)$, the size-$Q$ vector of class proportions.
 
 ### Useful quantities in the variational EM
@@ -96,9 +101,9 @@ where $b(x;\pi) = \pi^x (1-\pi)^{1-x}$ is the probability density function of th
 #### M step.
 
 For  fixed  values of  $\hat\tau_{iq}$ the  estimators    for   $\alpha_q$   and
-$\pi_{q\ell}$ by  maximizing the  conditional expectation are 
+$\pi_{q\ell}$ by  maximizing the  conditional expectation are
 \begin{equation}
-\hat{\alpha}_q = \frac{1}{n}\sum_i \hat{\tau}_{iq} , \quad \hat\pi_{q\ell} = \frac{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell} X_{ij}}{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell}}. 
+\hat{\alpha}_q = \frac{1}{n}\sum_i \hat{\tau}_{iq} , \quad \hat\pi_{q\ell} = \frac{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell} X_{ij}}{\sum_{i\neq j} \hat{\tau}_{iq}\hat{\tau}_{j\ell}}.
 \end{equation}
 
 #### E step.
@@ -112,18 +117,114 @@ The variational parameters $\tau_{iq}$ verify the following fixed point relation
 
 The variational ICL used to compare models with different numbers of clusters is
 \begin{multline*}
-  \mathrm{vICL}(Q) = \sum_{i,q} \hat{Z}_{iq} \log \hat{\alpha}_q + \sum_{i<j,q,\ell}  \hat{Z}_{iq}  \hat{Z}_{j\ell} b(X_{ij} ; \hat{\pi}_{q\ell}) 
+  \mathrm{vICL}(Q) = \sum_{i,q} \hat{Z}_{iq} \log \hat{\alpha}_q + \sum_{i<j,q,\ell}  \hat{Z}_{iq}  \hat{Z}_{j\ell} b(X_{ij} ; \hat{\pi}_{q\ell})
   \\ - \frac{1}{2} \left(\frac{Q(Q+1)}{2} \log \frac{n(n-1)}{2} + (Q-1) \log (n) \right)
-\end{multline*}    
+\end{multline*}
 where $\hat{Z}_{iq}$ is the maximum a posteriori associated to the estimated probability $\hat{\tau}_{iq}$.
 
-# Introduction
+# Simulations
 
-This practical aims to provide a quick overview of sparse Gaussian Graphical Models (GGM) and their use in the context of network reconstruction for gene interaction networks.
+## Random graph generation.
 
-To this end, we rely on the `R`-package **huge**, which implements some of the most popular sparse GGM methods and provides a set of basic tools for their handling and their analysis.
+Write a function which takes the parameters $p, \alpha, \pi$ for arguments and draw a random graph encoded as an igraph object. The vertices must own an attribute for their class membership. You may rely on the function `igraph::sample_sbm` which does almost all the job. Here is a skeleton for your own function:
+```{r rNetwork, eval = FALSE}
+rNetwork <- function(n, pi, alpha = c(1)) {
+### fill this up
+}
+```
 
-The first part focuses on an empirical analysis of the statistical models used for network reconstruction. The objective is to quickly study the range of applicability of these methods. It should also give you some insights about their limitations, especially toward the interpretability of the inferred network in terms of biology.
+## Examples
+Draw some graphs with the following topologies, by choosing :
 
-The second part applies these methods to one data sets: the first one consists in a transcriptomic data associated to a small regulatory network for which partial ground truth is available. The objective is to unravel the most striking interactions between differentially expressed genes.
+- Erdös-Rényi random networks,
+- Affiliation (or community) networks, i.e. with clusters of highly connected nodes,
+- Star networks, i.e. networks where a few nodes are highly connected to the others, the later being unconnected with each other.
+
+These networks can be represented via an image of the corresponding adjacency matrix (try the `image` method of the **Matrix** package), or thanks to the `R`-package **igraph**.
+
+# Variational Inference in the Stochastic block model
+
+Let us now write our own algorithm to fit an SBM on a `igraph` object. To do so, I give you the main algorithm here after. You just need to fill the functions `E_step`, `M_step`, `get_J` and compute the variational ICL and BIC.
+```{r VEM skeleton, eval = FALSE}
+VEM_SBM <- function(G, Q, cl.init, nstart=5, eps=1e-5, maxIter=50){
+## Initialization
+stopifnot(is.igraph(G))
+n <- gorder(G)
+J <- vector("numeric", maxIter)
+zero <- .Machine$double.eps
+### variational lower bound
+get_J <- function(theta, tau){
+## fill up below
+## ....
+## fill up above
+J
+}
+### M step: update theta (pi and alpha)
+M_step <- function(tau){
+## fill up below
+## ....
+## fill up above
+alpha[alpha < zero] <- zero
+pi[pi < zero] <- zero
+pi[pi > 1- zero] <- 1- zero
+list(pi = pi, alpha = alpha)
+}
+### E step: update the clustering parameters (tau)
+E_step <- function(theta, tau){
+## fill this up
+tau
+}
+VEM <- function(tau) {
+cond <- FALSE; iter <- 0
+while(!cond){
+4iter <- iter +1
+theta <- M_step(tau)
+# E step
+tau <- E_step(theta, tau) # M step
+J[iter] <- get_J(theta, tau) # assess convergence
+if (iter > 1)
+cond <- (iter > maxIter) | (abs((J[iter] - J[iter-1])) < eps)
+}
+return(list(theta = theta, tau = tau, J = J[1:iter]))
+}
+if (missing(cl.init)) {
+out <- replicate(nstart, {
+cl0 <- sample(1:Q, n, replace = TRUE)
+tau <- matrix(0,n,Q); tau[cbind(1:n, cl0)] <- 1
+VEM(tau)
+})
+best <- out[,which.max(sapply(out['J',], max))]
+} else {
+tau <- matrix(0,n,Q); tau[cbind(1:n, cl.init)] <- 1
+best <- VEM(tau)
+}
+## FILL THIS UPS FOR THE BEST MODEL
+# vBIC <-
+# vICL <-
+return(list(theta = best$theta,
+tau = best$tau, membership = apply(best$tau, 1, which.max),
+J = best$J, vICL = vICL, vBIC= vBIC))
+}
+```
+
+# Numerical experiments
+
+## Simple tests
+
+Use the `rNetwork` function to generate some SBM with various structures. Show that you can recover the original parameter thanks to the **mixer** R function. Also train yourself on the corresponding `getModel` and `plot`  functions. Now check that
+your own VEM function is also working. You can initialize the clusters with the
+spectral clustering function developed during the first tutorial.
+
+## Numerical study: real worl network analysis
+
+Consider a network of your own or one found in the **sand** package, for instance the French political blogosphere. Symmetrize the network and remove the isolated nodes. Then, apply the variational EM. Chose the number of classes with the vICL. Comment.
+
+## Simulations 1: assessing parameter estimation.
+
+Consider for instance an affiliation network with 3 classes. Do some simulations showing that the mean square error of $\hat{pi}_{q\ell}$ decrease when $n$ increases. To do so, assume that you know the correct number of classes in your graph.
+
+## Simulations 2: assessing clustering efficiency.
+
+Again, consider an affiliation network with 3 classes. Do some simulations showing that the adjusted rand index between the classification recovered by the VEM, when the number of classes is chosen so as to maximize the ICL, increases when $n$ increases. You may use the function `ARI` from the **aricode** package to compare two classifications.
+
 
