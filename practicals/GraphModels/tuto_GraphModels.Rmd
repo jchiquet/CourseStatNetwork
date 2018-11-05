@@ -221,7 +221,7 @@ Consider a network of your own or one found in the **sand** package, for instanc
 
 ## Simulations 1: assessing parameter estimation.
 
-Consider for instance an affiliation network with 3 classes. Do some simulations showing that the mean square error of $\hat{pi}_{q\ell}$ decrease when $n$ increases. To do so, assume that you know the correct number of classes in your graph.
+Consider for instance an affiliation network with 3 classes. Do some simulations showing that the mean square error of $\hat{\pi}_{q\ell}$ decrease when $n$ increases. To do so, assume that you know the correct number of classes in your graph.
 
 ## Simulations 2: assessing clustering efficiency.
 
