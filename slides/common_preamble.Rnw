@@ -59,7 +59,7 @@ opts_chunk$set(size = 'scriptsize',dev='pdf',fig.path='figures/',
     \titlepage
     \vfill
     \begin{center}
-        \scriptsize\url{http://github/jchiquet/JC2BIM}
+        \scriptsize\url{http://github/jchiquet/CourseStatNetwork}
     \end{center}
     \vfill
     \includegraphics[width=2cm]{\currentLogo}\hfill
