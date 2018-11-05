@@ -1,7 +1,7 @@
 ---
 title: "Tutorial: Descriptive Analysis for Network Graphs"
 author: "MSc in Statistics for Smart Data -- Introduction to graph analysis and modeling"
-date: "Julien Chiquet, October the 19, 2017"
+date: "Julien Chiquet, November the 6th, 2018"
 fontsize: 11pt
 lang: en
 geometry: left=1.45in,top=1.35in,right=1.45in,bottom=1.35in
@@ -32,20 +32,23 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \textsf{Instructions.} Each student _must_ send an `R markdown` report generated via `R studio` to <julien.chiquet@inra.fr> at the end of the tutorial. This report should answers the questions by commentaries and codes generating appropriate graphical outputs. [A cheat sheet of the  markdown syntax can be found here.](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 
-\textsf{Required packages.} Check that the following packages are correctly avaialble on your plateform:
+\textsf{Required packages.} Check that the following packages are available on your computer:
 ```{r, message=FALSE}
 library(igraph)
 library(sand)
 library(Matrix)
 library(devtools)
-library(aricode) ## devtools::install_github("jchiquet/aricode")
+library(aricode)
 ```
 
-You also need `Rstudio`, \LaTeX and packages for markdown: 
-
+You also need `Rstudio`, \LaTeX\ and packages for markdown: 
 ```{r, message=FALSE}
 library(knitr)
 library(rmarkdown)
+```
+If( and only if!!) you have time, you can also play with 
+```{r, message=FALSE}
+library(ggraph)
 ```
 
 # Introduction to **igraph**
@@ -104,7 +107,6 @@ Here is a reminder of the spectral clustering algorithm presented during course.
 
 \begin{algorithm}[H]
   \KwIn{Adjacency matrix and number of classes $Q$}
-  \BlankLine\BlankLine
   \DontPrintSemicolon
   
   Compute the normalized graph Laplacian $\mathbf{L}$\;
@@ -113,7 +115,6 @@ Here is a reminder of the spectral clustering algorithm presented during course.
   Define $\tilde{\mathbf{U}}$, the row-wise normalized version of $\mathbf{U}$: $ \tilde{u}_{ij} = \frac{u_{ij}}{\| \mathbf{U}_i\|_2}$\;
   Apply k-means to $(\tilde{\mathbf{U}}_i)_{i=1,\dots,p}$
 
-  \BlankLine\BlankLine
   \KwOut{vector of classes $\mathbf{C}\in \mathcal{Q}^p$, such as  $C_i = q$ if $i\in q$}
 
   \caption{Spectral Clustering by Ng, Jordan and Weiss (2002)}

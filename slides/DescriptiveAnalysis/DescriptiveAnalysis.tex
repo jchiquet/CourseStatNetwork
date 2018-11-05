@@ -113,7 +113,7 @@
     \titlepage
     \vfill
     \begin{center}
-        \scriptsize\url{http://github/jchiquet/CourseStatNetwork}
+        \scriptsize\url{https://github.com/jchiquet/CourseStatNetwork}
     \end{center}
     \vfill
     \includegraphics[width=2cm]{\currentLogo}\hfill
@@ -281,7 +281,7 @@
 \begin{frame}
   \frametitle{Adjacency matrix and list of edges}
 
-  \begin{definition}[Ajacency matrix]
+  \begin{definition}[Adjacency matrix]
     The connectivity of  $\clG = (\clV,\clE)$ is captured by the $|\clV|\times |\clV|$ matrix $\bA$:
     \[
       (\bA)_{ij} = \begin{cases}
@@ -391,6 +391,36 @@
 
 \end{knitrout}
   
+\end{frame}
+
+\begin{frame}[fragile, allowframebreaks]
+  \frametitle{Layout and Vizualization: \textbf{ggraph} way}
+ 
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(ggraph)}
+\hlkwd{library}\hlstd{(gridExtra)}
+\hlstd{g1} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog,} \hlkwc{layout} \hlstd{=} \hlstr{"fr"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_edge_link}\hlstd{(}\hlkwc{color} \hlstd{=} \hlstr{"lightgray"}\hlstd{)} \hlopt{+} \hlkwd{geom_node_point}\hlstd{()} \hlopt{+} \hlkwd{theme_void}\hlstd{()}
+
+\hlstd{g2} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog   ,} \hlkwc{layout} \hlstd{=} \hlstr{"fr"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_edge_link}\hlstd{(}\hlkwc{color} \hlstd{=} \hlstr{"lightgray"}\hlstd{)} \hlopt{+} \hlkwd{geom_node_point}\hlstd{()} \hlopt{+} \hlkwd{theme_void}\hlstd{()}
+
+\hlstd{g3} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog,} \hlkwc{layout} \hlstd{=} \hlstr{"linear"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_edge_arc}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{alpha}\hlstd{=..index..),} \hlkwc{show.legend} \hlstd{=} \hlnum{FALSE}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_node_point}\hlstd{()} \hlopt{+} \hlkwd{theme_void}\hlstd{()}
+
+\hlstd{g4} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog   ,} \hlkwc{layout} \hlstd{=} \hlstr{"linear"}\hlstd{,} \hlkwc{circular} \hlstd{=} \hlnum{TRUE}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_edge_link}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{alpha}\hlstd{=..index..),} \hlkwc{show.legend} \hlstd{=} \hlnum{FALSE}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_node_point}\hlstd{()} \hlopt{+} \hlkwd{theme_void}\hlstd{()}
+
+\hlkwd{grid.arrange}\hlstd{(g1, g2, g3, g4,} \hlkwc{nrow} \hlstd{=} \hlnum{2}\hlstd{,} \hlkwc{ncol} \hlstd{=} \hlnum{2}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=.8\textwidth]{figures/ggraph_vizu_1-1} 
+
+\end{knitrout}
 \end{frame}
 
 \begin{frame}
@@ -795,24 +825,14 @@ Create ego graphs around teacher and instructor
 \hlkwd{data}\hlstd{(karate)}
 
 \hlstd{ego.instr} \hlkwb{<-} \hlkwd{induced.subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{1}\hlstd{)[[}\hlnum{1}\hlstd{]])}
-\end{alltt}
 
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in FUN(X[[i]], ...): as.sociomatrix.sna input must be an adjacency matrix/array, network, or list.}}\begin{alltt}
 \hlstd{ego.admin} \hlkwb{<-} \hlkwd{induced.subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{34}\hlstd{)[[}\hlnum{1}\hlstd{]])}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in FUN(X[[i]], ...): as.sociomatrix.sna input must be an adjacency matrix/array, network, or list.}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 
 \begin{knitrout}\scriptsize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot(ego.instr): object 'ego.instr' not found}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot(ego.admin): object 'ego.admin' not found}}\end{kframe}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
 \includegraphics[width=.8\textwidth]{figures/density3-1} 
 
 \end{knitrout}
@@ -834,9 +854,10 @@ Maximal clique size, number of triangle
 \begin{alltt}
 \hlkwd{clique.number}\hlstd{(ego.admin)}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\begin{alltt}
+\begin{verbatim}
+## [1] 4
+\end{verbatim}
+\begin{alltt}
 \hlkwd{length}\hlstd{(}\hlkwd{triangles}\hlstd{(karate))}
 \end{alltt}
 \begin{verbatim}
@@ -845,9 +866,10 @@ Maximal clique size, number of triangle
 \begin{alltt}
 \hlkwd{length}\hlstd{(}\hlkwd{triangles}\hlstd{(ego.admin))}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\end{kframe}
+\begin{verbatim}
+## [1] 51
+\end{verbatim}
+\end{kframe}
 \end{knitrout}
 
 \end{frame}
@@ -897,14 +919,16 @@ Look for graph density and transitivity/clustering either globally or locally
 \begin{alltt}
 \hlkwd{graph.density}\hlstd{(ego.instr)}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.instr' not found}}\begin{alltt}
+\begin{verbatim}
+## [1] 0.25
+\end{verbatim}
+\begin{alltt}
 \hlkwd{graph.density}\hlstd{(ego.admin)}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\begin{alltt}
+\begin{verbatim}
+## [1] 0.2091503
+\end{verbatim}
+\begin{alltt}
 \hlkwd{transitivity}\hlstd{(karate)}
 \end{alltt}
 \begin{verbatim}
@@ -1222,39 +1246,20 @@ Look for graph density and transitivity/clustering either globally or locally
 
 
 \hlstd{f.vec} \hlkwb{<-} \hlstd{eig.anal}\hlopt{$}\hlstd{vectors[,} \hlnum{33}\hlstd{]}
-\hlstd{faction} \hlkwb{<-} \hlkwd{get.vertex.attribute}\hlstd{(karate,} \hlstr{"Faction"}\hlstd{)}
-\end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in get.vertex.attribute(karate, "{}Faction"{}): get.vertex.attribute requires an argument of class network.}}\begin{alltt}
+\hlstd{faction} \hlkwb{<-} \hlstd{igraph}\hlopt{::}\hlkwd{get.vertex.attribute}\hlstd{(karate,} \hlstr{"Faction"}\hlstd{)}
 \hlstd{f.colors} \hlkwb{<-} \hlkwd{as.character}\hlstd{(}\hlkwd{length}\hlstd{(faction))}
-\end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'faction' not found}}\begin{alltt}
 \hlstd{f.colors[faction} \hlopt{==} \hlnum{1}\hlstd{]} \hlkwb{<-} \hlstr{"red"}
-\end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in f.colors[faction == 1] <- "{}red"{}: object 'f.colors' not found}}\begin{alltt}
 \hlstd{f.colors[faction} \hlopt{==} \hlnum{2}\hlstd{]} \hlkwb{<-} \hlstr{"cyan"}
-\end{alltt}
 
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in f.colors[faction == 2] <- "{}cyan"{}: object 'f.colors' not found}}\begin{alltt}
 \hlkwd{par}\hlstd{(}\hlkwc{mfrow}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{2}\hlstd{))}
 \hlkwd{plot}\hlstd{(eig.anal}\hlopt{$}\hlstd{values,} \hlkwc{col}\hlstd{=}\hlstr{"blue"}\hlstd{,}
    \hlkwc{ylab}\hlstd{=}\hlstr{"Eigenvalues of Graph Laplacian"}\hlstd{)}
 \hlkwd{plot}\hlstd{(f.vec,} \hlkwc{pch}\hlstd{=}\hlnum{16}\hlstd{,} \hlkwc{xlab}\hlstd{=}\hlstr{"Actor Number"}\hlstd{,}
    \hlkwc{ylab}\hlstd{=}\hlstr{"Fiedler Vector Entry"}\hlstd{,} \hlkwc{col}\hlstd{=f.colors)}
-\end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot.xy(xy, type, ...): object 'f.colors' not found}}\begin{alltt}
 \hlkwd{abline}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{0}\hlstd{,} \hlkwc{lwd}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{col}\hlstd{=}\hlstr{"lightgray"}\hlstd{)}
 \end{alltt}
 \end{kframe}
-\includegraphics[width=.8\textwidth]{figures/unnamed-chunk-5-1} 
+\includegraphics[width=.8\textwidth]{figures/laplacian_example-1} 
 
 \end{knitrout}
 
@@ -1270,7 +1275,7 @@ Look for graph density and transitivity/clustering either globally or locally
 \hlkwd{plot}\hlstd{(hc,karate)}
 \end{alltt}
 \end{kframe}
-\includegraphics[width=.8\textwidth]{figures/unnamed-chunk-6-1} 
+\includegraphics[width=.8\textwidth]{figures/unnamed-chunk-5-1} 
 
 \end{knitrout}
 

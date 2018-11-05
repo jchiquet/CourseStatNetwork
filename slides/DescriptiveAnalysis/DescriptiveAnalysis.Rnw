@@ -163,7 +163,7 @@ plot(graph_from_literal(a---c, b---d), vertex.color=c("red", "red", "blue", "blu
 \begin{frame}
   \frametitle{Adjacency matrix and list of edges}
 
-  \begin{definition}[Ajacency matrix]
+  \begin{definition}[Adjacency matrix]
     The connectivity of  $\clG = (\clV,\clE)$ is captured by the $|\clV|\times |\clV|$ matrix $\bA$:
     \[
       (\bA)_{ij} = \begin{cases}
@@ -259,6 +259,30 @@ plot(GLattice, layout=layout.fruchterman.reingold); title("5x5x5 lattice")
 plot(GBlog   , layout=layout.fruchterman.reingold); title("blog network")
 @
   
+\end{frame}
+
+\begin{frame}[fragile, allowframebreaks]
+  \frametitle{Layout and Vizualization: \textbf{ggraph} way}
+ 
+<<ggraph_vizu_1, echo=TRUE>>=
+library(ggraph)
+library(gridExtra)
+g1 <- ggraph(GBlog, layout = "fr") + 
+  geom_edge_link(color = "lightgray") + geom_node_point() + theme_void()
+
+g2 <- ggraph(GBlog   , layout = "fr") + 
+  geom_edge_link(color = "lightgray") + geom_node_point() + theme_void()
+
+g3 <- ggraph(GBlog, layout = "linear") + 
+  geom_edge_arc(aes(alpha=..index..), show.legend = FALSE) + 
+  geom_node_point() + theme_void()
+
+g4 <- ggraph(GBlog   , layout = "linear", circular = TRUE) + 
+  geom_edge_link(aes(alpha=..index..), show.legend = FALSE) + 
+  geom_node_point() + theme_void()
+
+grid.arrange(g1, g2, g3, g4, nrow = 2, ncol = 2)
+@
 \end{frame}
 
 \begin{frame}
@@ -471,6 +495,7 @@ image(Matrix(distances(ppi.CC)))
 
 <<density, cache=TRUE, echo=FALSE, out.width='\\textwidth'>>=
 library(sna)
+
 A <- get.adjacency(karate, sparse=FALSE)
 library(network)
 g <- network::as.network.matrix(A)
@@ -957,13 +982,13 @@ plot(hc,karate)
 \begin{frame}[fragile,allowframebreaks]
   \frametitle{Example: Karate club and Fielder vector and eigenvalue}
 
-<<>>=
+<<laplacian example>>=
 k.lap <- graph.laplacian(karate)
 eig.anal <- eigen(k.lap)
 
 
 f.vec <- eig.anal$vectors[, 33]
-faction <- get.vertex.attribute(karate, "Faction")
+faction <- igraph::get.vertex.attribute(karate, "Faction")
 f.colors <- as.character(length(faction))
 f.colors[faction == 1] <- "red"
 f.colors[faction == 2] <- "cyan"
