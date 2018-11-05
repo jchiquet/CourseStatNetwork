@@ -6,9 +6,11 @@ An introduction to graph analysis and modeling
 > part of the [MSc in Statistics for Smart
 > Data](http://www.ensai.fr/formation/msc-in-statistics-for-smart-data.html).
 
-## Program
+## Schedule (tentative)
 
 ### Descriptive Analysis of Network Data
+
+November the 6th, 2018
 
   - *Course* Statistics on network data, Graph Partitionning -
     [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/DescriptiveAnalysis/DescriptiveAnalysis.pdf)
@@ -17,23 +19,65 @@ An introduction to graph analysis and modeling
 
 ### Statistical Models for Networks Data
 
+November the 15th, 2018
+
   - *Course*: Mixture Models, (variational) EM algorithm, Stochastic
-    Block Model - [slides]()
+    Block Model -
+    [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/GraphModel/GraphModel.pdf)
   - *Tutorial*: Stochastic Block Model and variational inference
-    [sheet]()
+    [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/GraphModel/tuto_GraphModel.pdf)
 
-## Schedule
+### Statistical Models for Networks Data: extension
 
-### Projects: extension of the stochastic block model
+November the 22th, 2018
 
-### <span class="glyphicon glyphicon-download-alt"></span> Documents
+## Computer requirements
 
-  - slides 0:
-    [Introduction](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/Introduction/Introduction.pdf)
+You need to have a recent version of
+[Rstudio](https://www.rstudio.com/products/rstudio/download/) installed
+with [R](https://cran.r-project.org) \>= 3.5.1 and the following
+packages installed:
+
+### Basic packages for R extensions
+
+``` r
+install.packages("devtools")
+install.packages("knitr")
+install.packages("rmarkdown")
+install.packages("aricode")
+install.packages("Matrix")
+```
+
+### Packages for graph manipulation
+
+``` r
+install.packages("igraph")
+install.packages("sna")
+install.packages("network")
+```
+
+### Packages for stochastic block models
+
+``` r
+install.packages("blockmodels")
+install.packages("mixer") ## you must install from source
+```
+
+### Packages for fancy plotting
+
+``` r
+install.packages("tidyverse")
+install.packages("ggraph")
+```
+
+## Projects: extension of the stochastic block model
+
+Coming soon
+
+## References
+
   - [Rstudio cheat
     sheets](https://www.rstudio.com/resources/cheatsheets/)
-
-### <span class="glyphicon glyphicon-book"></span> References
 
 Some book (not freely available, sorry)
 
