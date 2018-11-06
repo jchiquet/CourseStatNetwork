@@ -543,7 +543,7 @@
   \frametitle{Joint vertex degree distribution}
 
   \begin{definition}[Empirical distribution of $(d_i, d_j)$]
-    Let $\clG = (\clV,\clE$ be an undirected network an let $N(k,\ell)$ be the number of edges whose node have respective degrees equal to $(k,\ell)$ or $(\ell,k)$. Then the empirical distribution of $(d_i,d_j)$ is given by
+    Let $\clG = (\clV,\clE)$ be an undirected network an let $N(k,\ell)$ be the number of edges whose nodes have respective degrees equal to $(k,\ell)$ or $(\ell,k)$. Then the empirical distribution of $(d_i,d_j)$ is given by
     \[
       f_{k\ell} = \begin{cases}
       N(k,\ell)/2|\clE| & \text{ if } k < \ell \\
@@ -634,8 +634,8 @@
     How important is the node/vertice in the network?
   \end{block}
 
-  \begin{definition}[Closeness]
-    Closeness is the sum of the length of the shortest paths between the node and all other nodes in the graph. It can be defined as the reciprocal of the farness:
+  \begin{definition}[Farness, Closeness]
+    Farness is the sum of the length of the shortest paths between the node and all other nodes in the graph. Closeness is defined as its reciprocal:
     \[C(x)={\frac  {1}{\sum _{y}d(y,x)}}.\]
     $\rightsquigarrow$ \textit{The more central a node is, the closer it is to all other nodes.}
   \end{definition}
@@ -823,26 +823,14 @@ Create ego graphs around teacher and instructor
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{data}\hlstd{(karate)}
-
-\hlstd{ego.instr} \hlkwb{<-} \hlkwd{induced.subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{1}\hlstd{)[[}\hlnum{1}\hlstd{]])}
+\hlstd{ego.instr} \hlkwb{<-} \hlstd{igraph}\hlopt{::}\hlkwd{induced_subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{1}\hlstd{)[[}\hlnum{1}\hlstd{]])}
+\hlstd{ego.admin} \hlkwb{<-} \hlstd{igraph}\hlopt{::}\hlkwd{induced_subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{34}\hlstd{)[[}\hlnum{1}\hlstd{]])}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in FUN(X[[i]], ...): as.sociomatrix.sna input must be an adjacency matrix/array, network, or list.}}\begin{alltt}
-\hlstd{ego.admin} \hlkwb{<-} \hlkwd{induced.subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{34}\hlstd{)[[}\hlnum{1}\hlstd{]])}
-\end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in FUN(X[[i]], ...): as.sociomatrix.sna input must be an adjacency matrix/array, network, or list.}}\end{kframe}
+\end{kframe}
 \end{knitrout}
 
 \begin{knitrout}\scriptsize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot(ego.instr): object 'ego.instr' not found}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot(ego.admin): object 'ego.admin' not found}}\end{kframe}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
 \includegraphics[width=.8\textwidth]{figures/density3-1} 
 
 \end{knitrout}
@@ -864,9 +852,10 @@ Maximal clique size, number of triangle
 \begin{alltt}
 \hlkwd{clique.number}\hlstd{(ego.admin)}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\begin{alltt}
+\begin{verbatim}
+## [1] 4
+\end{verbatim}
+\begin{alltt}
 \hlkwd{length}\hlstd{(}\hlkwd{triangles}\hlstd{(karate))}
 \end{alltt}
 \begin{verbatim}
@@ -875,9 +864,10 @@ Maximal clique size, number of triangle
 \begin{alltt}
 \hlkwd{length}\hlstd{(}\hlkwd{triangles}\hlstd{(ego.admin))}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\end{kframe}
+\begin{verbatim}
+## [1] 51
+\end{verbatim}
+\end{kframe}
 \end{knitrout}
 
 \end{frame}
@@ -927,14 +917,16 @@ Look for graph density and transitivity/clustering either globally or locally
 \begin{alltt}
 \hlkwd{graph.density}\hlstd{(ego.instr)}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.instr' not found}}\begin{alltt}
+\begin{verbatim}
+## [1] 0.25
+\end{verbatim}
+\begin{alltt}
 \hlkwd{graph.density}\hlstd{(ego.admin)}
 \end{alltt}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\begin{alltt}
+\begin{verbatim}
+## [1] 0.2091503
+\end{verbatim}
+\begin{alltt}
 \hlkwd{transitivity}\hlstd{(karate)}
 \end{alltt}
 \begin{verbatim}
@@ -1045,7 +1037,7 @@ Look for graph density and transitivity/clustering either globally or locally
     Use standard distances on adjacency matrix:
     \begin{itemize}
       \item Euclidean distance: $\displaystyle x_{ij} = \sqrt{\sum_{ij} (A_{ik} - A_{jk})^2} $
-      \item Manhattan distance: $\displaystyle x_{ij} = \sum_{ij} |A_{ik} - A_{jk})^2| $
+      \item Manhattan distance: $\displaystyle x_{ij} = \sum_{ij} |A_{ik} - A_{jk})| $
       \item  etc\dots
     \end{itemize}  
   \end{block}
@@ -1130,7 +1122,7 @@ Look for graph density and transitivity/clustering either globally or locally
     \vspace{-.25cm}
     \begin{itemize}
       \item $\bL$ is a symmetric, positive semi-definite matrix,
-      \item  the smallest eigenvalue is $0$ with associated eigenvector $\mathbf{1}$.K
+      \item  the smallest eigenvalue is $0$ with associated eigenvector $\mathbf{1}$.
       \item $\bL$ has $n$ positive eigenvalues $0=\lambda_1<\dots <\lambda_n$. 
     \end{itemize}  
   \end{proposition}

@@ -9,7 +9,7 @@
 <<preamble, child='../common_preamble.Rnw'>>=
 @
 
-<<load_packages, echo=FALSE>>=
+<<load_packages, cache = FALSE, echo=FALSE>>=
 library(igraph)
 library(sand)
 @
@@ -387,7 +387,7 @@ plot(degrees.yeast[degrees.yeast!=0], log="xy", col=adjustcolor("blue", alpha.f 
   \frametitle{Joint vertex degree distribution}
 
   \begin{definition}[Empirical distribution of $(d_i, d_j)$]
-    Let $\clG = (\clV,\clE$ be an undirected network an let $N(k,\ell)$ be the number of edges whose node have respective degrees equal to $(k,\ell)$ or $(\ell,k)$. Then the empirical distribution of $(d_i,d_j)$ is given by
+    Let $\clG = (\clV,\clE)$ be an undirected network an let $N(k,\ell)$ be the number of edges whose nodes have respective degrees equal to $(k,\ell)$ or $(\ell,k)$. Then the empirical distribution of $(d_i,d_j)$ is given by
     \[
       f_{k\ell} = \begin{cases}
       N(k,\ell)/2|\clE| & \text{ if } k < \ell \\
@@ -462,8 +462,8 @@ image(Matrix(distances(ppi.CC)))
     How important is the node/vertice in the network?
   \end{block}
 
-  \begin{definition}[Closeness]
-    Closeness is the sum of the length of the shortest paths between the node and all other nodes in the graph. It can be defined as the reciprocal of the farness:
+  \begin{definition}[Farness, Closeness]
+    Farness is the sum of the length of the shortest paths between the node and all other nodes in the graph. Closeness is defined as its reciprocal:
     \[C(x)={\frac  {1}{\sum _{y}d(y,x)}}.\]
     $\rightsquigarrow$ \textit{The more central a node is, the closer it is to all other nodes.}
   \end{definition}
@@ -646,21 +646,20 @@ image(Matrix(igraph::similarity(ppi.CC, method = "jaccard")))
 \begin{frame}[fragile]
   \frametitle{Local density: example}
 
-<<echo=FALSE>>=
+<<echo=FALSE, cache = FALSE>>=
 rm(sna)
+library(igraph)
+library(sand)
 @
 
 Create ego graphs around teacher and instructor
-<<density2>>=
-
+<<density2, cache = FALSE>>=
 data(karate)
-
-ego.instr <- induced.subgraph(karate, neighborhood(karate, 1, 1)[[1]])
-
-ego.admin <- induced.subgraph(karate, neighborhood(karate, 1, 34)[[1]])
+ego.instr <- igraph::induced_subgraph(karate, neighborhood(karate, 1, 1)[[1]])
+ego.admin <- igraph::induced_subgraph(karate, neighborhood(karate, 1, 34)[[1]])
 @
 
-<<density3, echo=FALSE>>=
+<<density3, echo=FALSE, cache = FALSE>>=
 par(mfrow=c(1,3))
 plot(karate)
 plot(ego.instr)
@@ -673,7 +672,7 @@ plot(ego.admin)
   \frametitle{Local density: example II}
 
 Maximal clique size, number of triangle
-<<density4, >>=
+<<density4, cache = FALSE>>=
 clique.number(karate)
 clique.number(ego.admin)
 length(triangles(karate))
@@ -686,7 +685,7 @@ length(triangles(ego.admin))
   \frametitle{Local density: example III}
 
 Efficient motif counts
-<<density41, >>=
+<<density41, cache = FALSE>>=
 cliques(karate, min = 5)
 count_triangles(karate)
 @
@@ -697,7 +696,7 @@ count_triangles(karate)
   \frametitle{Local density: example IV}
 
 Look for graph density and transitivity/clustering either globally or locally
-<<density5>>=
+<<density5, cache = FALSE>>=
 graph.density(karate)
 graph.density(ego.instr)
 graph.density(ego.admin)
@@ -801,7 +800,7 @@ transitivity(karate, "local", vids=c(1,34))
     Use standard distances on adjacency matrix:
     \begin{itemize}
       \item Euclidean distance: $\displaystyle x_{ij} = \sqrt{\sum_{ij} (A_{ik} - A_{jk})^2} $
-      \item Manhattan distance: $\displaystyle x_{ij} = \sum_{ij} |A_{ik} - A_{jk})^2| $
+      \item Manhattan distance: $\displaystyle x_{ij} = \sum_{ij} |A_{ik} - A_{jk})| $
       \item  etc\dots
     \end{itemize}  
   \end{block}
@@ -868,7 +867,7 @@ plot(hc,karate)
     \vspace{-.25cm}
     \begin{itemize}
       \item $\bL$ is a symmetric, positive semi-definite matrix,
-      \item  the smallest eigenvalue is $0$ with associated eigenvector $\mathbf{1}$.K
+      \item  the smallest eigenvalue is $0$ with associated eigenvector $\mathbf{1}$.
       \item $\bL$ has $n$ positive eigenvalues $0=\lambda_1<\dots <\lambda_n$. 
     \end{itemize}  
   \end{proposition}
