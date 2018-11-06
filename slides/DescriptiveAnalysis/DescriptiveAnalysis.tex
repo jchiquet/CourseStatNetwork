@@ -404,7 +404,7 @@
 \hlstd{g1} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog,} \hlkwc{layout} \hlstd{=} \hlstr{"fr"}\hlstd{)} \hlopt{+}
   \hlkwd{geom_edge_link}\hlstd{(}\hlkwc{color} \hlstd{=} \hlstr{"lightgray"}\hlstd{)} \hlopt{+} \hlkwd{geom_node_point}\hlstd{()} \hlopt{+} \hlkwd{theme_void}\hlstd{()}
 
-\hlstd{g2} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog   ,} \hlkwc{layout} \hlstd{=} \hlstr{"fr"}\hlstd{)} \hlopt{+}
+\hlstd{g2} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog   ,} \hlkwc{layout} \hlstd{=} \hlstr{"kk"}\hlstd{)} \hlopt{+}
   \hlkwd{geom_edge_link}\hlstd{(}\hlkwc{color} \hlstd{=} \hlstr{"lightgray"}\hlstd{)} \hlopt{+} \hlkwd{geom_node_point}\hlstd{()} \hlopt{+} \hlkwd{theme_void}\hlstd{()}
 
 \hlstd{g3} \hlkwb{<-} \hlkwd{ggraph}\hlstd{(GBlog,} \hlkwc{layout} \hlstd{=} \hlstr{"linear"}\hlstd{)} \hlopt{+}
@@ -825,14 +825,24 @@ Create ego graphs around teacher and instructor
 \hlkwd{data}\hlstd{(karate)}
 
 \hlstd{ego.instr} \hlkwb{<-} \hlkwd{induced.subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{1}\hlstd{)[[}\hlnum{1}\hlstd{]])}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in FUN(X[[i]], ...): as.sociomatrix.sna input must be an adjacency matrix/array, network, or list.}}\begin{alltt}
 \hlstd{ego.admin} \hlkwb{<-} \hlkwd{induced.subgraph}\hlstd{(karate,} \hlkwd{neighborhood}\hlstd{(karate,} \hlnum{1}\hlstd{,} \hlnum{34}\hlstd{)[[}\hlnum{1}\hlstd{]])}
 \end{alltt}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in FUN(X[[i]], ...): as.sociomatrix.sna input must be an adjacency matrix/array, network, or list.}}\end{kframe}
 \end{knitrout}
 
 \begin{knitrout}\scriptsize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot(ego.instr): object 'ego.instr' not found}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in plot(ego.admin): object 'ego.admin' not found}}\end{kframe}
 \includegraphics[width=.8\textwidth]{figures/density3-1} 
 
 \end{knitrout}
@@ -854,10 +864,9 @@ Maximal clique size, number of triangle
 \begin{alltt}
 \hlkwd{clique.number}\hlstd{(ego.admin)}
 \end{alltt}
-\begin{verbatim}
-## [1] 4
-\end{verbatim}
-\begin{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\begin{alltt}
 \hlkwd{length}\hlstd{(}\hlkwd{triangles}\hlstd{(karate))}
 \end{alltt}
 \begin{verbatim}
@@ -866,10 +875,9 @@ Maximal clique size, number of triangle
 \begin{alltt}
 \hlkwd{length}\hlstd{(}\hlkwd{triangles}\hlstd{(ego.admin))}
 \end{alltt}
-\begin{verbatim}
-## [1] 51
-\end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\end{kframe}
 \end{knitrout}
 
 \end{frame}
@@ -919,16 +927,14 @@ Look for graph density and transitivity/clustering either globally or locally
 \begin{alltt}
 \hlkwd{graph.density}\hlstd{(ego.instr)}
 \end{alltt}
-\begin{verbatim}
-## [1] 0.25
-\end{verbatim}
-\begin{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.instr' not found}}\begin{alltt}
 \hlkwd{graph.density}\hlstd{(ego.admin)}
 \end{alltt}
-\begin{verbatim}
-## [1] 0.2091503
-\end{verbatim}
-\begin{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in "{}igraph"{} \%in\% class(graph): object 'ego.admin' not found}}\begin{alltt}
 \hlkwd{transitivity}\hlstd{(karate)}
 \end{alltt}
 \begin{verbatim}

@@ -270,7 +270,7 @@ library(gridExtra)
 g1 <- ggraph(GBlog, layout = "fr") + 
   geom_edge_link(color = "lightgray") + geom_node_point() + theme_void()
 
-g2 <- ggraph(GBlog   , layout = "fr") + 
+g2 <- ggraph(GBlog   , layout = "kk") + 
   geom_edge_link(color = "lightgray") + geom_node_point() + theme_void()
 
 g3 <- ggraph(GBlog, layout = "linear") + 
