@@ -15,14 +15,14 @@
 
 \dotitlepage
 
-\pgfdeclareimage[height=50px]{julien}{figures/julien.jpeg}
+\pgfdeclareimage[height=70px]{julien}{figures/julien.jpeg}
 
 \begin{frame} 
   \frametitle{Teacher}
 
 \begin{columns}
 \hspace{1em}\begin{column}{.66\textwidth}
-\begin{block}{UMR 518 ArgroParisTech/Inra}
+\begin{block}{UMR 518 AgroParisTech/Inra}
 \url{https://www6.inra.fr/mia-paris} 
 \end{block}
 \end{column}
@@ -54,28 +54,28 @@
 
 \end{frame}
 
+% \begin{frame}
+%   \frametitle{Motivation}
+%   \framesubtitle{Unravel the latent organization of an observed network}
+% 
+%   \begin{columns}
+%     \begin{column}{.4\textwidth}
+%       \begin{block}{E. coli regulatory network}
+%         \begin{itemize}
+%         \item relationships between gene and their products
+%         \item inhibition/activation
+%       \end{itemize}
+%       \end{block}
+%     \end{column}
+%     \begin{column}{.55\textwidth}
+%       \includegraphics<1>[width=\textwidth]{figures/net_reg_ecoli}
+%     \end{column}
+%   \end{columns}
+% 
+% \end{frame}
+
 \begin{frame}
-  \frametitle{Motivation 1}
-  \framesubtitle{Unravel the latent organization of an observed network}
-
-  \begin{columns}
-    \begin{column}{.4\textwidth}
-      \begin{block}{E. coli regulatory network}
-        \begin{itemize}
-        \item relationships between gene and their products
-        \item inhibition/activation
-      \end{itemize}
-      \end{block}
-    \end{column}
-    \begin{column}{.55\textwidth}
-      \includegraphics<1>[width=\textwidth]{figures/net_reg_ecoli}
-    \end{column}
-  \end{columns}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{Motivation 1}
+  \frametitle{Motivation}
   \framesubtitle{Unravel the latent organization of an observed network}
 
   \begin{figure}
@@ -86,64 +86,88 @@
   \end{figure}
 \end{frame}
 
-\pgfdeclareimage[width=.3\textwidth]{affymetrix}{figures/affy}
-\pgfdeclareimage[width=.18\textwidth]{sequencer}{figures/sequencer}
-\definecolor{genecolor}{RGB}{94,135,173}
 \begin{frame}
-  \frametitle{Motivation 2}
-  \framesubtitle{Reconstruct   an   network   to   capture   important
-    features of a system}
+  \frametitle{Motivation}
+  \framesubtitle{Unravel the latent organization of an observed network}
 
-
-        \begin{tikzpicture}
-        \node[scale=0.75,opacity=0.75] at (-3,3) {\pgfuseimage{sequencer}};
-        \node[scale=0.75] at (-3.5,1) {\pgfuseimage{affymetrix}};
-        \node[scale=0.75,fill=red, text=white,single arrow] 
-        (inference) at (-1.7,1.7) {\sf \scriptsize Inference}; 
-        
-        \node at (-3,-0.5) {\begin{tabular}{@{}c@{}}
-            \tiny $\approx$ 10s/1000s assays \\ 
-            \tiny $\approx $ 1000/100,000s features \\
-          \end{tabular}
-        };
-        
-        %% UN GRAPH 
-        \tikzstyle{every edge}=[-,>=stealth',shorten >=1pt,auto,thin,draw,color=genecolor]
-        \tikzstyle{every node}=[fill=genecolor]
-        \tikzstyle{every state}=[draw=none,text=white,scale=0.5, transform shape] 
-        
-        % premier cluster
-        \node[state] (A1) at (0,1.75) {g1};
-        \node[state] (A2) at (1,0.75) {g2};
-        \node[state] (A3) at (0,-.25) {g3};
-        \node[state] (A4) at (-1,0.75) {g4};
-        \node[state] (A5) at (0,0.75) {g5};
-        
-        \foreach   \name/\angle/\text   in  {B1/234/g6,   B2/162/g7,
-          B3/90/g8, B4/18/g9, B5/-54/g10} {
-          \node[state,xshift=4cm,yshift=4cm]     (\name)    at
-          (\angle:1cm) {\text}; }
-        
-        \node[state] (B6) at (2,2) {g11};
-        \node[state] (C1) at (3,0.5) {g12};
-        \node[state] (C2) at (2.2,0) {g13};
-        
-        \path 
-        (A5) edge [bend left] (A1)
-        (A5) edge [bend left] (A2)
-        (A5) edge [bend left] (A3)
-        (A5) edge [bend left] (A4)
-        (B6) edge [bend right] (B1) 
-        (B6) edge [bend right] (B2) 
-        (B6) edge [bend right] (B3) 
-        (B6) edge [bend right] (B4) 
-        (B6) edge [bend right] (B5) 
-        (C2) edge [bend left] (C1)
-        (A5) edge [bend left] (B6)
-        (B6) edge [bend right] (C2);
-      \end{tikzpicture}
-
+  \begin{figure}
+    \centering
+    \includegraphics[width=.5\textwidth]{figures/facebook_network}
+    \caption{\small Friendship network in Facebook
+      \alert{communities}}
+  \end{figure}
 \end{frame}
+
+\begin{frame}
+  \frametitle{Motivation}
+  \framesubtitle{Unravel the latent organization of an observed network}
+
+  \begin{figure}
+    \centering
+    \includegraphics[width=.8\textwidth]{figures/scholar_network}
+    \caption{\small Coauthorship network in google scholar
+      \alert{stars + communities}}
+  \end{figure}
+\end{frame}
+
+% \pgfdeclareimage[width=.3\textwidth]{affymetrix}{figures/affy}
+% \pgfdeclareimage[width=.18\textwidth]{sequencer}{figures/sequencer}
+% \definecolor{genecolor}{RGB}{94,135,173}
+% \begin{frame}
+%   \frametitle{Motivation 2}
+%   \framesubtitle{Reconstruct   an   network   to   capture   important
+%     features of a system}
+% 
+% 
+%         \begin{tikzpicture}
+%         \node[scale=0.75,opacity=0.75] at (-3,3) {\pgfuseimage{sequencer}};
+%         \node[scale=0.75] at (-3.5,1) {\pgfuseimage{affymetrix}};
+%         \node[scale=0.75,fill=red, text=white,single arrow] 
+%         (inference) at (-1.7,1.7) {\sf \scriptsize Inference}; 
+%         
+%         \node at (-3,-0.5) {\begin{tabular}{@{}c@{}}
+%             \tiny $\approx$ 10s/1000s assays \\ 
+%             \tiny $\approx $ 1000/100,000s features \\
+%           \end{tabular}
+%         };
+%         
+%         %% UN GRAPH 
+%         \tikzstyle{every edge}=[-,>=stealth',shorten >=1pt,auto,thin,draw,color=genecolor]
+%         \tikzstyle{every node}=[fill=genecolor]
+%         \tikzstyle{every state}=[draw=none,text=white,scale=0.5, transform shape] 
+%         
+%         % premier cluster
+%         \node[state] (A1) at (0,1.75) {g1};
+%         \node[state] (A2) at (1,0.75) {g2};
+%         \node[state] (A3) at (0,-.25) {g3};
+%         \node[state] (A4) at (-1,0.75) {g4};
+%         \node[state] (A5) at (0,0.75) {g5};
+%         
+%         \foreach   \name/\angle/\text   in  {B1/234/g6,   B2/162/g7,
+%           B3/90/g8, B4/18/g9, B5/-54/g10} {
+%           \node[state,xshift=4cm,yshift=4cm]     (\name)    at
+%           (\angle:1cm) {\text}; }
+%         
+%         \node[state] (B6) at (2,2) {g11};
+%         \node[state] (C1) at (3,0.5) {g12};
+%         \node[state] (C2) at (2.2,0) {g13};
+%         
+%         \path 
+%         (A5) edge [bend left] (A1)
+%         (A5) edge [bend left] (A2)
+%         (A5) edge [bend left] (A3)
+%         (A5) edge [bend left] (A4)
+%         (B6) edge [bend right] (B1) 
+%         (B6) edge [bend right] (B2) 
+%         (B6) edge [bend right] (B3) 
+%         (B6) edge [bend right] (B4) 
+%         (B6) edge [bend right] (B5) 
+%         (C2) edge [bend left] (C1)
+%         (A5) edge [bend left] (B6)
+%         (B6) edge [bend right] (C2);
+%       \end{tikzpicture}
+% 
+% \end{frame}
 
 \begin{frame} 
   \frametitle{Agenda (expected\dots)}
@@ -167,9 +191,10 @@
 
   \item[third day] Extensions of the SBM and project preparation (22/11)
     \begin{enumerate}
-    \item \alert{Accouting for Covariates} 
-    \item \alert{Multiplex networks} 
-    \item \alert{Latent Block Model} 
+    \item \alert{Accouting for covariates} 
+    \item \alert{Weighted network} 
+    \item \alert{Dynamic network} 
+    \item \alert{... and more} 
     \end{enumerate}
 
   \end{description}
@@ -183,17 +208,17 @@
 \item \alert{Practicals}
 
 \begin{itemize}
-\item each session comes with Practical on \texttt{R}
-\item send me a small \texttt{R}-markdown report \alert{at the end of the session}
+\item each session comes with practicals on \texttt{R}
+\item send me a \texttt{R}-markdown report \alert{at the end of the session/day}
 \end{itemize}
 \bigskip
 
-\item \alert{Projects} (more on this later)
+\item \alert{Projects}
   
 \begin{itemize}
-\item article review
-\item application project
-\item implementation of an algorithm
+\item article review (an SBM extension)
+\item application project (find some network data to play with)
+\item implementation of an algorithm / analysis
 \end{itemize}
 
 \end{enumerate}
@@ -210,11 +235,10 @@
     \begin{thebibliography}{99}
       \setbeamertemplate{bibliography item}[book]
 
-    \bibitem[JW]{JW} Graphical Models in Applied Multivariate Statistics, \textcolor{black}{Joe Whittaker}
-    \bibitem[SL]{SL} Graphical Models, \textcolor{black}{S. Lauritzen}
-    \bibitem[EK]{EK} Statistical Analysis of Network Data with R, \textcolor{black}{Eric Kolazcyk}
+    \bibitem[EK]{EK} Statistical Analysis of Network Data: Methods and Models, by \textcolor{black}{Eric Kolazcyk}
+    \bibitem[EKGC]{EKGC} Statistical Analysis of Network Data with R, \textcolor{black}{Eric Kolazcyk and Gábor Csárdi}
     \bibitem[CB]{CB} Pattern recognition and Machine Learning, \textcolor{black}{C. Bishop}
-    \bibitem[EI]{EI} The Element of Statistical Learning \textcolor{black}{Hastie, Tibshirani, Friedman}
+    
     \end{thebibliography}
 
   \end{frame}
