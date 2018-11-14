@@ -1,7 +1,7 @@
 ---
-title: "Tutorial: Descriptive Analysis for Network Graphs"
+title: "Tutorial: Descriptive Analysis for Network Graphs - hints"
 author: "MSc in Statistics for Smart Data -- Introduction to graph analysis and modeling"
-date: "Julien Chiquet, October the 19, 2017"
+date: "Julien Chiquet, November the 6th, 2018"
 fontsize: 11pt
 lang: en
 geometry: left=1.45in,top=1.35in,right=1.45in,bottom=1.35in
@@ -19,124 +19,108 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE)
 ```
 
-# Preliminaries {-}
+# Packages requirements
 
-\textsf{Goals.}
-
-1. Basic network manipulations with `igraph`, vizualization, descriptive statistics
-2. Graph partitioning: hierarchical clustering and spectral clustering algorithms
-3. Analysis of the network of French political blogs
-
-\textsf{Instructions.} Each student _must_ send an `R markdown` report generated via `R studio` to <julien.chiquet@inra.fr> at the end of the tutorial. This report should answers the questions by commentaries and codes generating appropriate graphical outputs. [A cheat sheet of the  markdown syntax can be found here.](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
-
-\textsf{Required packages.} Check that the following packages are correctly avaialble on your plateform:
-```{r, message=FALSE}
+```{r requirement}
+library(tidygraph)
+library(scholar)
 library(igraph)
-library(sand)
-library(Matrix)
-library(devtools)
-library(aricode) ## devtools::install_github("jchiquet/aricode")
+library(ggraph)
+library(viridis)
 ```
 
-You also need `Rstudio`, \LaTeX and packages for markdown: 
+# Network extraction
 
-```{r, message=FALSE}
-library(knitr)
-library(rmarkdown)
+I found working with my co-authors' network was more fun: I use the **scholar** package to extract it.
+
+```{r scholar network, cache = TRUE}
+chiquet <- "FM2gRsYAAAAJ"
+my_coauthors_network <- 
+  scholar::get_coauthors(chiquet, n_coauthors = 10, n_deep = 1) %>% 
+  graph_from_data_frame(directed = FALSE) %>% 
+  igraph::simplify(remove.multiple = TRUE, remove.loops = TRUE)
 ```
 
-# Introduction to **igraph**
-
-## Tutorials 
-
-Have a glance at these two tutorials
-
-- [an **igraph** tutorial](https://rstudio-pubs-static.s3.amazonaws.com/74248_3bd99f966ed94a91b36d39d8f21e3dc3.html) for graphs manipulation.
--  [network analysis with **igraph**](http://kateto.net/networks-r-igraph) that gives an overview of the standard features of **igraph** to perform basic statistical analysis on network graphs.
-
-## Exercice 
-
-Play with the small `data(karate)` network or another data set of your choice to discover **igraph**. Refer to the above tutorial for help. 
-
-- vizualization: add color/change size to vertices and edges; check layouts
-- statistics: plot degree distribution, find the most connected node, find interesting motifs like cliques or triplets, compute density, centrality, ...
-- manipulation: extract network centered to the most connected node
-- you are free to find fun things to do (with networks...)
-
-```{r}
-library(scholarnetwork)
-scholarChiquet <- extractNetwork("FM2gRsYAAAAJ")
-# scholarTibshirani <- extractNetwork("ZpG_cJwAAAAJ")
-
-myScholar <- graph_from_data_frame(scholarChiquet$edges,
-                                   vertices = scholarChiquet$nodes,
-                                   directed = FALSE)
-plot(myScholar, vertex.color=scholarChiquet$nodes$group)
-# scholarTibshirani <- graph_from_data_frame(scholarTibshirani$edges, directed = FALSE)
-
+Here is a fancy representation of this network with the **ggraph** package:
+```{r ggraph scholar}
+groups <- as.factor(as.numeric(membership(cluster_edge_betweenness(my_coauthors_network))))
+my_coauthors_network %>% 
+  tidygraph::as_tbl_graph() %>% activate(nodes) %>% 
+  mutate(degree = centrality_degree(), 
+         membership = groups,
+         betweenness = centrality_betweenness()) %>% 
+  ggraph() + scale_color_viridis() +
+    geom_edge_link() + 
+    geom_node_point(aes(size = degree, shape = membership, color = betweenness) ) + 
+    geom_node_text(aes(label = name)) + 
+    theme_void()
 ```
 
-# Analysis of the French political Blogs in 2006
+# Spectral Analysis
 
-Load the data set and upgrade to the current version of **igraph** 
-```{r}
-blogosphere2006 <- upgrade_graph(fblog)
+## Simple community network
+
+Let us star by studying toy examples to better understand th spectral graph theory:
+
+```{r community graph}
+community <- igraph::sample_sbm(40, matrix(c(.25, .01, .01, .25), 2, 2), c(20, 20))
+plot(community)
 ```
 
-## Descriptive statistics
 
-Explore the standard descriptives statistics for vertices, edges and network: density, transitivity, diameter, degree distribution, centrality, hubs, shortest paths and distances, cliques, triplets and so on.
+```{r laplacian}
+L <- graph.laplacian(community, normalized = TRUE)
+Matrix::image(L)
+```
 
-Amend your network (via attributes) and give some vizualizations if relevent. Make comments: each plot must support some interesting facts about the data.
+By, looking at space spawned by the first two eigen vector of $L$, we see that the clustering problem is outrageously easy (all point from the same community are superimposed) 
 
-## Graph Partionning
+```{r eigen_vector}
+U <- eigen(L)$vectors
+Q <- 2
+U <- U[,c((ncol(U)-Q+1):ncol(U))]
+U <- U / rowSums(U^2)^(1/2)
+plot(U[, 1], U[, 2])
+```
 
-It is now time to find some more subtle structure in the network by performing graph clustering of the nodes. A commonly seeked structure in networks is the presence of _communities_, taht is, nodes that shares similar connectivy patterns, like clusters of friends in social networks.
+## Spectral clustering of coauthorship network
 
-The two methods explored today for community detection do not assume any underlying model on the graph. The first one is based on a generalization of hierarchical clustering for graphs using the concept of
-_modularity_ to define an appropriate dissimilarity measure between clusters. The second is the normalized spectral clustering.
+Hereafter, an implementation of the spectral clustering algorithm studied during last session, 
 
-### Hierarchical clustering with modularity
+```{r spectral_normalized}
+SpectralClustering <- function (A,Q) {
 
-Just like in usual hierarchical clustering, we need some cost function to choose which clusters are fused during construction of the hierarchy. Let $\mathcal{C} = \{C_1,\dots,C_K\}$ be a candidate partition and define $f_{ij}(\mathcal{C})$ to be the fraction of edges in the original network that connect vertices in $C_i$ with vertices in $C_j$. The modularity of $\mathcal{C}$ is the value
-\begin{equation*}
-  \mathrm{modularity}(\mathcal{C}) = \sum_{k=1}^K \left(f_{kk}(\mathcal{C}) - f_{kk}^\star\right)^2
-\end{equation*}
-where $f_{kk}^\star$  is the expected value of $f_{kk}$ under some model of random edge assignment. The `igraph::fastgreedy.community` function performs and approximated optimization of the modularity measure.
+  p <- ncol(A)
+  if (Q > 1) {
+    
+    ## Normalized Laplacian
+    L <- graph.laplacian(A, normalized = TRUE)    
+    ## go into eigenspace
+    U <- eigen(L)$vectors
+    U <- U[,c((ncol(U)-Q+1):ncol(U))]
+    U <- U / rowSums(U^2)^(1/2)
+        
+    ## Applying the K-means in the eigenspace
+    cl <- kmeans(U, Q, nstart = 10, iter.max = 30)$cluster
+  } else {
+    cl <- as.factor(rep(1,ncol(A)))
+  }
+  cl
+}
+```
 
-Use this function to extract a possible clustering of the nodes for the French blogosophere. Use the plot function for object with class `communities` outputting from `igraph::fastgreedy.community`. Compare this clustering with the political labels of the nodes (use for instance confusion tables with `table` or adjusted Rand-Index with `aricode::ARI`).
-
-Explore the results offered by the other clustering methods for community detection (e.g. `igraph::cluster_edge_betweenness`), or the ones obtained by a simple hierarchical clustering on dissimilarity measured on the adjacency matrix.
-
-### Spectral Analysis
-
-Here is a reminder of the spectral clustering algorithm presented during course.
-
-\begin{algorithm}[H]
-  \KwIn{Adjacency matrix and number of classes $Q$}
-  \BlankLine\BlankLine
-  \DontPrintSemicolon
-  
-  Compute the normalized graph Laplacian $\mathbf{L}$\;
-  Compute the eigen vectors of $\mathbf{L}$ associated with the $Q$ smallest eigenvalues\;
-  Define $\mathbf{U}$,  the $p\times Q$ matrix  that encompasses these $Q$ vectors \;
-  Define $\tilde{\mathbf{U}}$, the row-wise normalized version of $\mathbf{U}$: $ \tilde{u}_{ij} = \frac{u_{ij}}{\| \mathbf{U}_i\|_2}$\;
-  Apply k-means to $(\tilde{\mathbf{U}}_i)_{i=1,\dots,p}$
-
-  \BlankLine\BlankLine
-  \KwOut{vector of classes $\mathbf{C}\in \mathcal{Q}^p$, such as  $C_i = q$ if $i\in q$}
-
-  \caption{Spectral Clustering by Ng, Jordan and Weiss (2002)}
-\end{algorithm}
-
-1. Compute the graph Laplacian (normalized of unormalized) by hands or with the `igraph::graph.laplacian` function.
-2. Compute its eigen values and represent the scree plot (eigen values by increasing order). Comment.
-3. Compute its eigen vectors and represent the pairs plot between the first 10 eigen vectors with non-null eigen values. Add colors associated to the Political labels of the nodes.  Comment.
-4. Implement the Spectral clustering algorithm and apply it to the French Blogosphere for various numbers of clusters. 
-5. Compare your clustering to the political labels and to the one obtained by hierarchical clustering. Comment, make plots changing node colors, etc.
-6. Redo the analysis with the absolute spectral clustering of Rohe et al (2011).
-
-**Remark:** Another fancy alternative to the **igraph** package is the `Matrix::image` method on the adjacency matrix of a graph once rows and columns reordered according to the clustering to represent the clustered network.
+```{r clustering coaurthors}
+cl_list <- lapply(2:7, function(Q)
+  SpectralClustering(my_coauthors_network, Q)
+)
+A <- as_adj(my_coauthors_network)
+lapply(cl_list, function(cl) 
+  Matrix::image(
+    A[order(cl), order(cl)],
+    main = paste('number of cluster =',length(unique(cl)))
+  )
+)
+```
