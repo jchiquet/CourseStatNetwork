@@ -18,14 +18,14 @@ November the 6th, 2018
   - *Course* Statistics on network data, Graph Partitionning	- [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/DescriptiveAnalysis/DescriptiveAnalysis.pdf)
   - *Tutorial* Basical graph manipulation and Spectral Clustering [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis.pdf)
 
-### Statistical Models for Networks Data
+### Statistical Models for Networks Data: SBM part 1
 
 November the 15th, 2018
 
   - *Course*: Mixture Models, EM algorithm - [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/GraphModel/GraphModels.pdf)
   - *Tutorial*: Reminder on mixture models [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/tuto_mixtureModelsEM.pdf)
 
-### Statistical Models for Networks Data: SBM and extension
+### Statistical Models for Networks Data: SBM part 2
 
   - *Course*: Variational EM algorithm, Stochastic Block Model	- [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/GraphModel/GraphModels.pdf)
   - *Tutorial*: Stochastic Block Model and variational inference [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/GraphModels/tuto_GraphModels.pdf)
