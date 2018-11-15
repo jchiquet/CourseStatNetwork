@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 November the 6th, 2018
 
   - *Course* Statistics on network data, Graph Partitionning	- [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/DescriptiveAnalysis/DescriptiveAnalysis.pdf)
-  - *Tutorial* Basical graph manipulation and Spectral Clustering [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis.pdf)
+  - *Tutorial* Basical graph manipulation and Spectral Clustering [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis.pdf), [quick element of correction](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis_corr.pdf)
 
 ### Statistical Models for Networks Data: SBM part 1
 

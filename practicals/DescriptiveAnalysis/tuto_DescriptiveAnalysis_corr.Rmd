@@ -63,7 +63,7 @@ my_coauthors_network %>%
 
 ## Simple community network
 
-Let us star by studying toy examples to better understand th spectral graph theory:
+Let us star by studying a toy example to better understand th spectral graph theory:
 
 ```{r community graph}
 community <- igraph::sample_sbm(40, matrix(c(.25, .01, .01, .25), 2, 2), c(20, 20))
@@ -71,12 +71,21 @@ plot(community)
 ```
 
 
+The Laplcian is a similarity matrix, and can be interpreted as such:
 ```{r laplacian}
 L <- graph.laplacian(community, normalized = TRUE)
 Matrix::image(L)
 ```
 
-By, looking at space spawned by the first two eigen vector of $L$, we see that the clustering problem is outrageously easy (all point from the same community are superimposed) 
+Looking at the eigen values of the Laplacian, we see that the smallest one is beyond the numerical precision, thus practically zero (meaning one connected component)
+. The second smallest eigen value is extremely small two: indeed, the community graph that we generated is extremely close to a two-component graph.
+
+```{r laplacian eigen values}
+plot(eigen(L)$values)
+print(eigen(L)$values[39:40])
+```
+
+Indeed, by looking at the space spawned by the first two eigen vector of $L$, we see that the clustering problem is outrageously easy (all point from the same community are superimposed) 
 
 ```{r eigen_vector}
 U <- eigen(L)$vectors
