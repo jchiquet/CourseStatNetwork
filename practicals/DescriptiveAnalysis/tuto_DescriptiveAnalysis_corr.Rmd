@@ -77,8 +77,7 @@ L <- graph.laplacian(community, normalized = TRUE)
 Matrix::image(L)
 ```
 
-Looking at the eigen values of the Laplacian, we see that the smallest one is beyond the numerical precision, thus practically zero (meaning one connected component)
-. The second smallest eigen value is extremely small two: indeed, the community graph that we generated is extremely close to a two-component graph.
+Looking at the eigen values of the Laplacian, we see that the smallest one is beyond the numerical precision, thus practically zero (meaning one connected component). The second smallest eigen value is extremely small too: indeed, the community graph that we generated is extremely close to a two-component graph.
 
 ```{r laplacian eigen values}
 plot(eigen(L)$values)
