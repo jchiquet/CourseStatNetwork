@@ -48,7 +48,7 @@ You also need `Rstudio`, \LaTeX\ and packages for markdown:
 library(knitr)
 library(rmarkdown)
 ```
-If( and only if!!) you have time, you can also play with 
+If (and only if!!) you have time, you can also play with 
 ```{r, message=FALSE}
 library(ggraph)
 ```
@@ -177,7 +177,7 @@ VEM_SBM <- function(G, Q, cl.init, nstart=5, eps=1e-5, maxIter=50){
   VEM <- function(tau) {
     cond <- FALSE; iter <- 0
     while(!cond){
-      4iter <- iter +1
+      iter <- iter +1
       theta <- M_step(tau)
       # E step
       tau <- E_step(theta, tau) # M step
