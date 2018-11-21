@@ -1,0 +1,68 @@
+---
+title: "Projects"
+author: "MSc in Statistics for Smart Data -- Introduction to graph analysis and modeling"
+date: "Julien Chiquet, November the 22, 2018"
+fontsize: 11pt
+lang: en
+geometry: left=1.45in,top=1.35in,right=1.45in,bottom=1.35in
+classoption: a4paper
+linkcolor: red
+urlcolor: blue
+citecolor: green
+output:
+  pdf_document:
+    number_sections: true
+    citation_package: natbib
+    includes:
+      in_header: ../practicals/preamble.sty
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
+```
+
+## Instruction {-}
+
+In each project, the trinome should read the journal paper and write a report on the general motivations, goals and methods used. You do not need to have a deep understanding of the technical aspects.
+
+Then, you must illustrate these methods on a real world data set picked up on the internet. For each project, their exist an `R` package so you will not need to write much code\footnote{expect for making some fancy figures!}. The second part of your report will present the results of your analyses.
+
+Your oral presentation will present your report, that should not exceed 10 pages long (but _well written_).
+
+_Send me the report back at <julien.chiquet@inra.fr> before the 13th of December at midnight._
+
+## Web resources {-}
+
+\textsf{Network data}
+
+Pick up some network data (with less than 500/1000 nodes for your convenience!) to illustrate the method that you study, for instance in 
+
+- Network repository [http://networkrepository.com/](http://networkrepository.com/)
+- General network data: [http://www-personal.umich.edu/~mejn/netdata/](http://www-personal.umich.edu/~mejn/netdata/)
+- Ecological network database: [http://networkrepository.com/eco.php](http://networkrepository.com/eco.php)
+- SNAP database: [https://snap.stanford.edu/data/index.html](https://snap.stanford.edu/data/index.html)
+- ... _feel free to use your own network data_.
+
+## Project 1 - beyond binary edges {-}
+
+This paper presents several extensions of the Stochastic Block Model where edges are weighted with various distributions (Poisson and Gaussian for instance). It also shows how one can include external knowledge on top of the network structure, by means of covariates on the nodes of the graph. All the corresponding models are implemented in the package **blockmodels**.  Use it to analysis some weighted network data and/or binary network with covariates.
+
+\textsf{Journal paper.} Mahendra Mariadassou, Stéphane Robin and Corinne Vacher. _Uncovering latent structure in valued graphs: a variational approach._ The Annals of Applied Statistics (2010): 715-742. [https://arxiv.org/pdf/1011.1813.pdf](https://arxiv.org/pdf/1011.1813.pdf)
+
+\textsf{R package.} [https://CRAN.R-project.org/package=blockmodels]( https://CRAN.R-project.org/package=blockmodels), see also [https://arxiv.org/abs/1602.07587](https://arxiv.org/abs/1602.07587)
+
+## Project 2 - dynamic SBM {-}
+
+This paper uses an extension of the Stochastic Block Model where memberships may vary across time in order tp analyse an ecological network gathered in time. The corresponding model is implemented in the package **dynsbm**. Use it to analysis some time-varying network data.
+
+\textsf{Journal paper.} Vincent Miele and Catherine Matias. _Revealing the hidden structure of dynamic ecological networks._ Royal Society Open Science 4.6 (2017): 170251. [http://rsos.royalsocietypublishing.org/content/4/6/170251](http://rsos.royalsocietypublishing.org/content/4/6/170251)
+
+\textsf{R package.} [https://CRAN.R-project.org/package=dynsbm](https://CRAN.R-project.org/package=dynsbm )
+
+## Project 3 - Multiplex SBM {-}
+
+When several relationships of various types can occur jointly between nodes, the data are represented by multiplex networks where more than one edge can exist between the nodes. The bivariate Bernoulli version of the multiplex SBM used in the following paper is implemented in the package **blockmodels**.  Use it to analysis some multiplex network data.
+
+\textsf{Journal papers.}  Pierre Barbillon, Sophie Donnet, Emmanuel Lazega and Avner Bar‐Hen. _Stochastic block models for multiplex networks: an application to a multilevel network of researchers._ Journal of the Royal Statistical Society: Serie A, 180: 295-314. (2017)
+
+\textsf{R package.} [https://CRAN.R-project.org/package=blockmodels]( https://CRAN.R-project.org/package=blockmodels), see also [https://arxiv.org/abs/1602.07587](https://arxiv.org/abs/1602.07587)
