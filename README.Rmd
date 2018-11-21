@@ -73,9 +73,11 @@ install.packages("ggraph")
 
 ## Evaluation and Projects: extension of the stochastic block model
 
+  - *Projects are here*: [subjects](https://github.com/jchiquet/CourseStatNetwork/raw/master/projects/projects.pdf)
+
 Subjects of the projects will be discussed on the 22th of November. 
 
-Evaluation of the module will be made based on 1) a report (less than 10 pages in English) and 2) A 15 talks presenting your project and 3) the report sent at the end of each tutorial.
+Evaluation of the module will be made based on 1) a report (less than 10 pages in English) and 2) A 15 talks presenting your project and 3) the reports sent at the end of each tutorial.
 
 ## References 
 
