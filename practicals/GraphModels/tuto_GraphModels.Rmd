@@ -147,63 +147,63 @@ These networks can be represented via an image of the corresponding adjacency ma
 Let us now write our own algorithm to fit an SBM on a `igraph` object. To do so, I give you the main algorithm here after. You just need to fill the functions `E_step`, `M_step`, `get_J` and compute the variational ICL and BIC.
 ```{r VEM skeleton, eval = FALSE}
 VEM_SBM <- function(G, Q, cl.init, nstart=5, eps=1e-5, maxIter=50){
-## Initialization
-stopifnot(is.igraph(G))
-n <- gorder(G)
-J <- vector("numeric", maxIter)
-zero <- .Machine$double.eps
-### variational lower bound
-get_J <- function(theta, tau){
-## fill up below
-## ....
-## fill up above
-J
-}
-### M step: update theta (pi and alpha)
-M_step <- function(tau){
-## fill up below
-## ....
-## fill up above
-alpha[alpha < zero] <- zero
-pi[pi < zero] <- zero
-pi[pi > 1- zero] <- 1- zero
-list(pi = pi, alpha = alpha)
-}
-### E step: update the clustering parameters (tau)
-E_step <- function(theta, tau){
-## fill this up
-tau
-}
-VEM <- function(tau) {
-cond <- FALSE; iter <- 0
-while(!cond){
-4iter <- iter +1
-theta <- M_step(tau)
-# E step
-tau <- E_step(theta, tau) # M step
-J[iter] <- get_J(theta, tau) # assess convergence
-if (iter > 1)
-cond <- (iter > maxIter) | (abs((J[iter] - J[iter-1])) < eps)
-}
-return(list(theta = theta, tau = tau, J = J[1:iter]))
-}
-if (missing(cl.init)) {
-out <- replicate(nstart, {
-cl0 <- sample(1:Q, n, replace = TRUE)
-tau <- matrix(0,n,Q); tau[cbind(1:n, cl0)] <- 1
-VEM(tau)
-})
-best <- out[,which.max(sapply(out['J',], max))]
-} else {
-tau <- matrix(0,n,Q); tau[cbind(1:n, cl.init)] <- 1
-best <- VEM(tau)
-}
-## FILL THIS UPS FOR THE BEST MODEL
-# vBIC <-
-# vICL <-
-return(list(theta = best$theta,
-tau = best$tau, membership = apply(best$tau, 1, which.max),
-J = best$J, vICL = vICL, vBIC= vBIC))
+  ## Initialization
+  stopifnot(is.igraph(G))
+  n <- gorder(G)
+  J <- vector("numeric", maxIter)
+  zero <- .Machine$double.eps
+  ### variational lower bound
+  get_J <- function(theta, tau){
+    ## fill up below
+    ## ....
+    ## fill up above
+    J
+  }
+  ### M step: update theta (pi and alpha)
+  M_step <- function(tau){
+    ## fill up below
+    ## ....
+    ## fill up above
+    alpha[alpha < zero] <- zero
+    pi[pi < zero] <- zero
+    pi[pi > 1- zero] <- 1- zero
+    list(pi = pi, alpha = alpha)
+  }
+  ### E step: update the clustering parameters (tau)
+  E_step <- function(theta, tau){
+    ## fill this up
+    tau
+  }
+  VEM <- function(tau) {
+    cond <- FALSE; iter <- 0
+    while(!cond){
+      4iter <- iter +1
+      theta <- M_step(tau)
+      # E step
+      tau <- E_step(theta, tau) # M step
+      J[iter] <- get_J(theta, tau) # assess convergence
+      if (iter > 1)
+        cond <- (iter > maxIter) | (abs((J[iter] - J[iter-1])) < eps)
+    }
+    return(list(theta = theta, tau = tau, J = J[1:iter]))
+  }
+  if (missing(cl.init)) {
+    out <- replicate(nstart, {
+      cl0 <- sample(1:Q, n, replace = TRUE)
+      tau <- matrix(0,n,Q); tau[cbind(1:n, cl0)] <- 1
+      VEM(tau)
+    })
+    best <- out[,which.max(sapply(out['J',], max))]
+  } else {
+    tau <- matrix(0,n,Q); tau[cbind(1:n, cl.init)] <- 1
+    best <- VEM(tau)
+  }
+  ## FILL THIS UPS FOR THE BEST MODEL
+  # vBIC <-
+  # vICL <-
+  return(list(theta = best$theta,
+              tau = best$tau, membership = apply(best$tau, 1, which.max),
+              J = best$J, vICL = vICL, vBIC= vBIC))
 }
 ```
 
