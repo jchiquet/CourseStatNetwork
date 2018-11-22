@@ -960,7 +960,7 @@ Let us plot the data and the theoretical mixture.
   \end{center}
 
   \begin{align*}
-    Z_i = \mathbf{1}_{\{i \in \bullet\}}  \ & \sim^{\text{iid}} \mathcal{M}(1,\alpha), \quad \forall\bullet\in\mathcal{Q}, \\
+    \mathbf{Z}_i = \left\{\mathbf{1}_{\{i \in \bullet\}}\right\}_{\bullet\in\mathcal{Q}} = (\mathbf{1}_{\{i \in \textcolor{yellow!40!orange}{\bullet}\}}, \mathbf{1}_{\{i \in \textcolor{blue!80!black}{\bullet}\}}, \mathbf{1}_{\{i \in \textcolor{green!50!black}{\bullet}\}}) = \ & \sim^{\text{iid}} \mathcal{M}(1,\alpha), \\
     X_{ij} \ | \ \{i\in\textcolor{yellow!40!orange}{\bullet},j\in\textcolor{blue!80!black}{\bullet}\} & \sim^{\text{ind}} \mathcal{B}(\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}})\\
   \end{align*}
 
@@ -1031,7 +1031,7 @@ Let us plot the data and the theoretical mixture.
               \item
                 $\mathcal{Q}=\{\textcolor{yellow!40!orange}{\bullet},\textcolor{blue!80!black}{\bullet},\textcolor{green!50!black}{\bullet}\}$,
                 $\text{card}(\mathcal{Q})$ known
-              \item  $\alpha_\bullet  =  ?$,
+              \item  $\alpha_\bullet  =  ?$
               \item      $\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}}     =      ?$
               \end{itemize}
             \end{block}
@@ -1042,7 +1042,7 @@ Let us plot the data and the theoretical mixture.
     \end{center}
 
   \begin{align*}
-    Z_i = \mathbf{1}_{\{i \in \bullet\}}  \ & \sim^{\text{iid}} \mathcal{M}(1,\alpha), \quad \forall\bullet\in\mathcal{Q}, \\
+    \mathbf{Z}_i = \left\{\mathbf{1}_{\{i \in \bullet\}}\right\}_{\bullet\in\mathcal{Q}} = (\mathbf{1}_{\{i \in \textcolor{yellow!40!orange}{\bullet}\}}, \mathbf{1}_{\{i \in \textcolor{blue!80!black}{\bullet}\}}, \mathbf{1}_{\{i \in \textcolor{green!50!black}{\bullet}\}}) \ & \sim^{\text{iid}} \mathcal{M}(1,\alpha) \\
     X_{ij} \ | \ \{i\in\textcolor{yellow!40!orange}{\bullet},j\in\textcolor{blue!80!black}{\bullet}\} & \sim^{\text{ind}} \mathcal{B}(\pi_{\textcolor{yellow!40!orange}{\bullet}\textcolor{blue!80!black}{\bullet}})\\
   \end{align*}
 
@@ -1090,7 +1090,7 @@ Let us plot the data and the theoretical mixture.
   \begin{block}{Conditional degree distribution}
     The conditional degree distribution of a node $i\in q$ is
     \begin{equation*}
-      D_i | i \in q \sim \mathrm{b}(n-1,\bar\pi) \approx \mathcal{P}(\lambda_q), \qquad \bar\pi_q = \sum_{\ell=1}^Q \alpha_\ell, \pi_{q\ell} \quad \lambda_q = (n-1)\bar\pi_q
+      D_i | i \in q \sim \mathrm{b}(n-1,\bar\pi) \approx \mathcal{P}(\lambda_q), \qquad \bar\pi_q = \sum_{\ell=1}^Q \alpha_\ell \pi_{q\ell} \quad \lambda_q = (n-1)\bar\pi_q
     \end{equation*}
   \end{block}
 
@@ -1204,9 +1204,9 @@ Let us plot the data and the theoretical mixture.
   \begin{block}{Family of distribution that factorizes}
       We chose $\mathbb{Q}$ so as the $Z_{iq}$ are marginally independents:
       \begin{equation*}
-        \mathbb{Q}(\bZ) = \prod_{i=1}^n \mathbb{Q}_i(Z_i) = \prod_{i=1}^n\prod_{q=1}^Q \tau_{iq}^{Z_{iq}},
+        \mathbb{Q}(\bZ) = \prod_{i=1}^n \mathbb{Q}_i(\mathrm{cl}(i)) = \prod_{i=1}^n\prod_{q=1}^Q \tau_{iq}^{Z_{iq}},
       \end{equation*}
-      where $\tau_{iq} =\mathbb{Q}_i(Z_{i} = q) = \E{Q}(Z_{iq})$, with $\sum_{q} \tau_{iq} = 1$ for all $i=1,\dots,n$.
+      where $\tau_{iq} =\mathbb{Q}_i(i \in q) = \E_{\mathbb{Q}}(Z_{iq})$, with $\sum_{q} \tau_{iq} = 1$ for all $i=1,\dots,n$.
   \end{block}
 
 \end{frame}
