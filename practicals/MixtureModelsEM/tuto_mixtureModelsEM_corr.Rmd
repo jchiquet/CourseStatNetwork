@@ -1,7 +1,7 @@
 ---
-title: "Tutorial: Reminder (?) on mixture model and the EM algorithm - correction"
-author: "MSc in Statistics for Smart Data -- Introduction to graph analysis and modeling"
-date: "Julien Chiquet, November the 13th, 2018"
+title: "Tutorial: Gaussian mixture model and the EM algorithm"
+author: "MAP573 -- Introduction to unsupervised learning"
+date: "École Polytechnique - Autumn 2019"
 fontsize: 11pt
 lang: en
 geometry: left=1.45in,top=1.35in,right=1.45in,bottom=1.35in
@@ -49,13 +49,13 @@ i=1,\dots,n; q=1,\dots Q})$. The negative complete-data
 loglikelihood is derived as follows
 
 \Answer{%
-\begin{equation}
+\begin{equation*}
 \begin{aligned}
-\log L(\boldsymbol{\mu},\boldsymbol{\sigma}^2,\boldsymbol\tau; \mathbf{x}) & = \sum_{i=1}^n \log \left(\mathbb{P}rod_{q=1}^Q \alpha_q f(x_i; \mu_q,\sigma^2_q)^{Z_{iq}} \right)\\
+\log L(\boldsymbol{\mu},\boldsymbol{\sigma}^2,\boldsymbol\tau; \mathbf{x}) & = \sum_{i=1}^n \log \left(\prod_{q=1}^Q \alpha_q f(x_i; \mu_q,\sigma^2_q)^{Z_{iq}} \right)\\
 & = \sum_{i=1}^n \sum_{q=1}^Q Z_{iq} \left(\log  \frac{\alpha_q}{\sigma\sqrt{2\mathbb{P}i}} \exp\{\frac{1}{2\sigma^2}(x_i - \mu_q)^2\} \right)\\
 & = \sum_{i=1}^n \sum_{q=1}^Q Z_{iq} \left(\log \alpha_q - \log\sigma -\log(\sqrt{2\mathbb{P}i}) - \frac{1}{2\sigma_q^2} (x_i - \mu_q)^2 \right)
 \end{aligned}
-\end{equation}
+\end{equation*}
 }
 
 ## _E-step._ 
@@ -112,48 +112,58 @@ Similarly, for $\hat\sigma_q$, we get
 
 - _Implementation._  
 
-```{r EM}
-get.cloglik <- function(X, Z, alpha, mu, sigma) {
-    n <- length(X); Q <- length(alpha)
-    xs <- sweep(sweep(matrix(X,n,Q),2,mu,"-"),2,sigma,"/")
-    return(sum(t(Z)*(log(alpha)-log (sigma)-.5*(log(2*pi)+t(xs)^2))))
+```{r auxiliary functions}
+get_cloglik <- function(X, Z, theta) {
+  alpha <- theta$alpha; mu <- theta$mu; sigma <- theta$sigma
+  xs <- scale(matrix(X,length(x),length(alpha)),mu,sigma)
+  res <- sum(Z*(log(alpha)-log(sigma)-.5*(log(2*pi)+xs^2)))
+  res
+}
+M_step <- function(X, tau) {
+  n <- length(X); Q <- ncol(tau)
+  alpha  <- colMeans(tau)
+  mu     <- colMeans(tau * matrix(X,n,Q)) / alpha
+  sigma  <- sqrt(colMeans(tau*sweep(matrix(X,n,Q),2,mu,"-")^2)/alpha)
+  list(alpha = alpha, mu = mu, sigma = sigma)
 }
 
-EM.mixture <- function(X, Q, 
-                       init.cl=kmeans(X,Q)$cl, max.iter=100, eps=1e-5) {
-    ## INITIALIZATIONS
-    n <- length(X)
-    tau <- matrix(0,n,Q)
-    tau[cbind(1:n,init.cl)] <- 1
+E_step <- function(X, theta) {
+  probs <- mapply(function(alpha, mu, sigma) {
+    alpha*dnorm(X,mu,sigma)
+  }, theta$alpha, theta$mu, theta$sigma)
+  likelihoods <- rowSums(probs)
+  list(tau = probs / likelihoods, loglik = sum(log(likelihoods)))
+}
+
+```
+
+```{r EM}
+EM_mixture <- function(X, Q,
+                       init.cl = sample(1:Q,n,rep=TRUE), max.iter=100, eps=1e-5) {
+    n <- length(X); tau <- matrix(0,n,Q); tau[cbind(1:n,init.cl)] <- 1
     loglik  <- vector("numeric", max.iter)
-    cloglik <- vector("numeric", max.iter)
+    Eloglik <- vector("numeric", max.iter)
     iter <- 0; cond <- FALSE
 
     while (!cond) {
         iter <- iter + 1
         ## M step
-        alpha  <- colMeans(tau)
-        mu     <- colMeans(tau * matrix(X,n,Q)) / alpha
-        sigma  <- sqrt(colMeans(tau*sweep(matrix(X,n,Q),2,mu,"-")^2)/alpha)
-        ## E step    
-        prob <- sapply(1:Q, function(q) alpha[q]*dnorm(x,mu[q],sigma[q]))
-        likelihoods <- rowSums(prob)
-        tau <-  prob / likelihoods 
-        Z <- 1*(tau >= .5)
+        theta <- M_step(X, tau)
+        ## E step
+        res_Estep <- E_step(X, theta)
+        tau <- res_Estep$tau
         ## check consistency
-        loglik[iter]  <- sum(log(likelihoods))
-        cloglik[iter] <- get.cloglik(X, Z, alpha, mu, sigma)
-        if (iter > 1) 
-            cond <- (iter>=max.iter) | abs(cloglik[iter]-cloglik[iter-1]) < eps        
+        loglik[iter]  <- res_Estep$loglik
+        Eloglik[iter] <- get_cloglik(X, tau, theta)
+        if (iter > 1)
+            cond <- (iter>=max.iter) | Eloglik[iter]-Eloglik[iter-1] < eps
     }
 
-    return(list(alpha = alpha , 
-                mu    = mu    , 
-                sigma = sigma, 
-                tau   = tau   ,
-                cl    = apply(Z,1,which.max),
-                cloglik = cloglik[1:iter],
-                loglik  = loglik[1:iter]))
+    res <- list(alpha = theta$alpha,  mu = theta$mu,  sigma = theta$sigma,
+                tau   = tau, cl = apply(tau, 1, which.max),
+                Eloglik = Eloglik[1:iter],
+                loglik  = loglik[1:iter])
+    res
 }
 ```
 
@@ -197,8 +207,8 @@ rug(x)
 Suppose that we know the number of components, i.e. 4.
 
 ```{r test EM}
-out <- EM.mixture(x, Q=4)
-plot(out$loglik, main="data log-likelihood", type="l")
+out <- EM_mixture(x, Q = 4)
+plot(out$loglik, main = "data log-likelihood", type="l")
 
 curve(alpha[1]*dnorm(x,mu1,sigma1) +
       alpha[2]*dnorm(x,mu2,sigma2) +
@@ -220,18 +230,18 @@ table(out$cl,cl)
 The number of component mixture is hard to recover because of the last two mixed components
 
 ```{r model selection}
-seq.Q <- 2:10
+seq.Q <- 2:6
 crit.EM <- sapply(seq.Q, function(Q) {
-    out <- EM.mixture(x, Q)
-    df <- Q-1 + 2 * Q
-    return(c(BIC = -2*tail(out$loglik,1)  + log(n)*df,
-             ICL = -2*tail(out$cloglik,1) + log(n)*df ))
+    out <- EM_mixture(x, Q, kmeans(x,Q)$cl)
+    df <- Q - 1 + 2 * Q
+    return(c(BIC = -2*tail(out$loglik ,1) + log(n)*df,
+             ICL = -2*tail(out$Eloglik,1) + log(n)*df ))
 })
 matplot(seq.Q, t(crit.EM), type="l", col=c("red", "blue"))
 legend("topleft", c("BIC", "ICL"), col=c("red", "blue"),lty=1)
 
 Q.hat <- seq.Q[which.min(crit.EM[1, ])]
-out <- EM.mixture(x, Q=Q.hat)
+out <- EM_mixture(x, Q = Q.hat, kmeans(x, Q.hat)$cl)
 par(mfrow=c(1,1))
 curve(alpha[1]*dnorm(x,mu1,sigma1) +
       alpha[2]*dnorm(x,mu2,sigma2) +

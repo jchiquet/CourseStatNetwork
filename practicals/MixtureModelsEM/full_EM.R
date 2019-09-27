@@ -1,51 +1,54 @@
 rm(list=ls())
 
-get.cloglik <- function(X, Z, alpha, mu, sigma) {
-    n <- length(X); Q <- length(alpha)
-    x.scaled <- sweep(sweep(matrix(X,n,Q), 2,  mu, "-"), 2, sigma, "/")
-    return(sum(Z * ( log(alpha) - log (sigma) - .5 * (log(2*pi) + x.scaled^2))))
+get_cloglik <- function(X, Z, theta) {
+  alpha <- theta$alpha; mu <- theta$mu; sigma <- theta$sigma
+  xs <- scale(matrix(X, length(X), length(alpha)), mu, sigma)
+  res <- sum(Z*(log(alpha) - log(sigma) - .5*(log(2*pi) + xs^2)))
+  res
+}
+M_step <- function(X, tau) {
+  n <- length(X); Q <- ncol(tau)
+  alpha  <- colMeans(tau)
+  mu     <- colMeans(tau * matrix(X,n,Q)) / alpha
+  sigma  <- sqrt(colMeans(tau *sweep(matrix(X,n,Q), 2,  mu, "-")^2) / alpha)  
+  list(alpha = alpha, mu = mu, sigma = sigma)
 }
 
-EM.mixture <- function(X, Q, init.cl=kmeans(X,Q)$cl, max.iter=100, eps=1e-5) {
+E_step <- function(X, theta) {
+  prob <- mapply(function(alpha, mu, sigma) {
+    alpha*dnorm(X,mu,sigma)
+  }, theta$alpha, theta$mu, theta$sigma)
+  likelihoods <- rowSums(prob)
+  list(tau = prob / likelihoods, loglik = sum(log(likelihoods)))
+}
 
-    ## INITIALIZATIONS
-    n <- length(X)
-    tau <- matrix(0,n,Q)
-    tau[cbind(1:n,init.cl)] <- 1
+EM_mixture <- function(X, Q,
+                       init.cl = kmeans(X,Q)$cl, max.iter=100, eps=1e-5) {
+    n <- length(X); tau <- matrix(0,n,Q); tau[cbind(1:n,init.cl)] <- 1
     loglik  <- vector("numeric", max.iter)
-    cloglik <- vector("numeric", max.iter)
-    iter <- 0
-    cond <- FALSE
+    Eloglik <- vector("numeric", max.iter)
+    iter <- 0; cond <- FALSE
 
     while (!cond) {
         iter <- iter + 1
-
         ## M step
-        alpha  <- colMeans(tau)
-        mu     <- colMeans(tau * matrix(X,n,Q)) / alpha
-        sigma  <- sqrt(colMeans(tau *sweep(matrix(X,n,Q), 2,  mu, "-")^2) / alpha)
-        
-        ## E step    
-        prob <- sapply(1:Q, function(q) alpha[q] * dnorm(x, mu[q], sigma[q]))
-        likelihoods <- rowSums(prob)
-        tau <-  prob / likelihoods 
-        Z <- 1*(tau >= .5)
-
-        loglik[iter]  <- sum(log(likelihoods))
-        cloglik[iter] <- get.cloglik(X, Z, alpha, mu, sigma)
-        if (iter > 1) 
-            cond <- (iter >= max.iter) | cloglik[iter] <= cloglik[iter-1] + eps
-        
+        theta <- M_step(X, tau)
+        ## E step
+        res_Estep <- E_step(X, theta)
+        tau <- res_Estep$tau
+        ## check consistency
+        loglik[iter]  <- res_Estep$loglik
+        Eloglik[iter] <- get_cloglik(X, tau, theta)
+        if (iter > 1)
+            cond <- (iter >= max.iter) | Eloglik[iter] - Eloglik[iter-1] < eps
     }
-    return(list(alpha = alpha , 
-                mu    = mu    , 
-                sigma = sigma, 
-                tau   = tau   ,
-                cl    = apply(Z,1,which.max),
-                cloglik = cloglik[1:iter],
-                loglik  = loglik[1:iter]))
+
+    res <- list(alpha = theta$alpha,  mu = theta$mu,  sigma = theta$sigma,
+                tau   = tau, cl = apply(tau, 1, which.max),
+                Eloglik = Eloglik[1:iter],
+                loglik  = loglik[1:iter])
+    res
 }
- 
 
 ## checking against mixtools results
 library(mixtools)
@@ -61,13 +64,13 @@ n <- length(x)
 seq.Q <- 2:10
 
 crit.EM <- sapply(seq.Q, function(Q) {
-    out <- EM.mixture(x, Q)
+    out <- EM_mixture(x, Q)
     df <- Q-1 + 2 * Q
-    return(c(BIC = -2*tail(out$loglik,1)  + log(n)*df,
-             ICL = -2*tail(out$cloglik,1) + log(n)*df ))
+    return(c(BIC = -2*tail(out$loglik ,1) + log(n)*df,
+             ICL = -2*tail(out$Eloglik,1) + log(n)*df ))
 })
 
-EM.Q2 <- EM.mixture(x, Q=2)
+EM.Q2 <- EM_mixture(x, Q=2)
 
 EM.ref <- normalmixEM(x)
 EM.ref$mu
