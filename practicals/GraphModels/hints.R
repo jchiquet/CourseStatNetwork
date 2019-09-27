@@ -20,7 +20,7 @@ VEM_SBM <- function(G, Q, cl.init, nstart=5, eps=1e-5, maxIter=50){
   n <- gorder(G)
   J <- vector("numeric", maxIter)
   zero <- .Machine$double.eps
-  mat_edges     <- as_adj(G, sparse=FALSE)  
+  mat_edges     <- as_adj(G, sparse = FALSE)  
   mat_edges_bar <- (1 - mat_edges); diag(mat_edges_bar) <- 0 
   
   ### variational lower bound
