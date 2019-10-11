@@ -15,9 +15,7 @@ November the 6th, 2018
   - *Course* Statistics on network data, Graph Partitionning -
     [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/DescriptiveAnalysis/DescriptiveAnalysis.pdf)
   - *Tutorial* Basical graph manipulation and Spectral Clustering
-    [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis.pdf),
-    [quick element of
-    correction](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis_corr.pdf)
+    [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/DescriptiveAnalysis/tuto_DescriptiveAnalysis.pdf)
 
 ### Statistical Models for Networks Data: SBM part 1
 
@@ -27,11 +25,12 @@ November the 15th, 2018
     [slides](https://github.com/jchiquet/CourseStatNetwork/raw/master/slides/GraphModel/GraphModels.pdf)
   - *Tutorial*: Reminder on mixture models
     [sheet](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/tuto_mixtureModelsEM.pdf)
-    [hints](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/hints.R)
-  - *Correction*: [full algorithm in
-    R](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/full_EM.R)
-    and [detailed
-    correction](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/tuto_mixtureModelsEM_corr.pdf)
+
+<!-- [hints](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/hints.R) -->
+
+<!--   - *Correction*: [full algorithm in R](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/full_EM.R) and  -->
+
+<!-- [detailed correction](https://github.com/jchiquet/CourseStatNetwork/raw/master/practicals/MixtureModelsEM/tuto_mixtureModelsEM_corr.pdf) -->
 
 ### Statistical Models for Networks Data: SBM part 2
 
